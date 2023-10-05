@@ -112,6 +112,15 @@ public class MainActivity3 extends AppCompatActivity {
                 ex.printStackTrace();
         }
     }
+    public void sendData_v2() {
+        String mess = imageString;
+        try {
+            Client_send c1 = new Client_send();
+            c1.execute(mess);
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
 
 
     // Class gửi đi dữ liệu
