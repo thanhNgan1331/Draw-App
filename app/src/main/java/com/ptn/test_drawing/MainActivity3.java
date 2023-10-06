@@ -33,10 +33,12 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.Objects;
 
+import yuku.ambilwarna.AmbilWarnaDialog;
+
 public class MainActivity3 extends AppCompatActivity {
 
     // Initialize variable
-    Button btnEncode, btnDecode;
+    Button btnEncode, btnDecode, btnChangeColor;
     TextView textView;
     ImageView imageView;
     String sImage;
@@ -48,6 +50,7 @@ public class MainActivity3 extends AppCompatActivity {
     private Paint paint = new Paint();
 
     String imageString;
+    int DefaultColor = Color.BLACK;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,10 +59,37 @@ public class MainActivity3 extends AppCompatActivity {
 
         btnEncode = findViewById(R.id.btnSaveImg);
         btnDecode = findViewById(R.id.btnDel);
+        btnChangeColor = findViewById(R.id.btnChangeColor);
         imageView = findViewById(R.id.imageView);
 
+        btnChangeColor.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                OpenColorPickerDialog(false);
+            }
+        });
 
     }
+
+    private void OpenColorPickerDialog(boolean AlphaSupport) {
+
+        AmbilWarnaDialog ambilWarnaDialog = new AmbilWarnaDialog(MainActivity3.this, DefaultColor, AlphaSupport, new AmbilWarnaDialog.OnAmbilWarnaListener() {
+            @Override
+            public void onOk(AmbilWarnaDialog ambilWarnaDialog, int color) {
+                paint.setColor(color);
+                btnChangeColor.setBackgroundColor(color);
+            }
+
+            @Override
+            public void onCancel(AmbilWarnaDialog ambilWarnaDialog) {
+
+                Toast.makeText(MainActivity3.this, "Color Picker Closed", Toast.LENGTH_SHORT).show();
+            }
+        });
+        ambilWarnaDialog.show();
+
+    }
+
 
     public void buttonSaveImage(View view) {
         Uri images;
@@ -101,17 +131,16 @@ public class MainActivity3 extends AppCompatActivity {
     }
 
 
-
-
     public void sendData_v1() {
         String mess = imageString;
         try {
             Client_send c1 = new Client_send();
             c1.execute(mess);
         } catch (Exception ex) {
-                ex.printStackTrace();
+            ex.printStackTrace();
         }
     }
+
     public void sendData_v2() {
         String mess = imageString;
         try {
@@ -132,7 +161,7 @@ public class MainActivity3 extends AppCompatActivity {
         protected Void doInBackground(String... voids) {
             try {
                 String mess = voids[0];
-                s = new Socket("192.168.1.3", 6862);
+                s = new Socket("192.168.1.2", 6862);
                 writer = new PrintWriter(s.getOutputStream());
                 writer.write(mess);
                 writer.flush();
@@ -153,7 +182,7 @@ public class MainActivity3 extends AppCompatActivity {
             canvas.drawColor(Color.WHITE);
 
 
-            paint.setColor(Color.RED);
+            paint.setColor(DefaultColor);
             paint.setAntiAlias(true);
             paint.setStyle(Paint.Style.STROKE);
             paint.setStrokeWidth(8);

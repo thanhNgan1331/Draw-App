@@ -8,7 +8,7 @@
     android:background="@color/white"
     android:orientation="vertical"
     android:padding="16dp"
-    tools:context=".MainActivity">
+    tools:context=".MainActivity3">
 
     <!-- Layout to display buttons
         for encoding and decoding-->
@@ -43,6 +43,18 @@
             android:onClick="btnDelete"
             android:textSize="10sp"
             android:textColor="@color/white"
+            app:backgroundTint="@color/black" />
+
+        <Button
+            android:id="@+id/btnChangeColor"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginLeft="4dp"
+            android:layout_weight="1"
+            android:onClick="btnDelete"
+            android:textColor="@color/white"
+            android:textSize="10sp"
             app:backgroundTint="@color/black" />
 
     </LinearLayout>
