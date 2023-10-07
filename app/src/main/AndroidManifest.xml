@@ -18,18 +18,25 @@
         android:theme="@style/Theme.Test_Drawing"
         tools:targetApi="31">
         <activity
-            android:name=".MainActivity3"
+            android:name=".ConnectToTheServerActivity"
             android:exported="true"
-            android:label="@string/title_activity_main3"
-            android:theme="@style/Theme.Test_Drawing" >
+            android:theme="@style/Theme.Test_Drawing">
+
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
 
-    <activity
+        </activity>
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:label="@string/title_activity_main3"
+            android:theme="@style/Theme.Test_Drawing">
+
+        </activity>
+        <activity
             android:name=".MainActivity2"
             android:exported="false" />
     </application>

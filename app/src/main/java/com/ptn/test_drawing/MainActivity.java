@@ -1,13 +1,11 @@
 package com.ptn.test_drawing;
 
-import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -23,7 +21,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
@@ -35,22 +32,21 @@ import java.util.Objects;
 
 import yuku.ambilwarna.AmbilWarnaDialog;
 
-public class MainActivity3 extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity {
 
     // Initialize variable
     Button btnEncode, btnDecode, btnChangeColor;
-    TextView textView;
     ImageView imageView;
-    String sImage;
-    byte[] bytes;
-
     private float startX = -1, startY = -1, endX = -1, endY = -1;
     private Bitmap bitmap;
     private Canvas canvas;
     private Paint paint = new Paint();
-
     String imageString;
     int DefaultColor = Color.BLACK;
+
+    String ip;
+    int port;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +57,11 @@ public class MainActivity3 extends AppCompatActivity {
         btnDecode = findViewById(R.id.btnDel);
         btnChangeColor = findViewById(R.id.btnChangeColor);
         imageView = findViewById(R.id.imageView);
+
+        // Nhận dữ liệu từ Activity trước
+        Intent intent = getIntent();
+        ip = intent.getStringExtra("ip_key");
+        port = intent.getIntExtra("port_key", 6862);
 
         btnChangeColor.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -73,7 +74,7 @@ public class MainActivity3 extends AppCompatActivity {
 
     private void OpenColorPickerDialog(boolean AlphaSupport) {
 
-        AmbilWarnaDialog ambilWarnaDialog = new AmbilWarnaDialog(MainActivity3.this, DefaultColor, AlphaSupport, new AmbilWarnaDialog.OnAmbilWarnaListener() {
+        AmbilWarnaDialog ambilWarnaDialog = new AmbilWarnaDialog(MainActivity.this, DefaultColor, AlphaSupport, new AmbilWarnaDialog.OnAmbilWarnaListener() {
             @Override
             public void onOk(AmbilWarnaDialog ambilWarnaDialog, int color) {
                 paint.setColor(color);
@@ -83,13 +84,19 @@ public class MainActivity3 extends AppCompatActivity {
             @Override
             public void onCancel(AmbilWarnaDialog ambilWarnaDialog) {
 
-                Toast.makeText(MainActivity3.this, "Color Picker Closed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MainActivity.this, "Color Picker Closed", Toast.LENGTH_SHORT).show();
             }
         });
         ambilWarnaDialog.show();
 
     }
 
+    public void btnLogout(View view) {
+        sendData_v1("logout");
+        Intent intent = new Intent(this, ConnectToTheServerActivity.class);
+        startActivity(intent);
+        finish();
+    }
 
     public void buttonSaveImage(View view) {
         Uri images;
@@ -109,9 +116,9 @@ public class MainActivity3 extends AppCompatActivity {
             OutputStream outputStream = contentResolver.openOutputStream(Objects.requireNonNull(uri));
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
             Objects.requireNonNull(outputStream);
-            Toast.makeText(MainActivity3.this, "Lưu ảnh thành công", Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, "Lưu ảnh thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            Toast.makeText(MainActivity3.this, "Lưu ảnh thất bại", Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, "Lưu ảnh thất bại", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
     }
@@ -131,18 +138,7 @@ public class MainActivity3 extends AppCompatActivity {
     }
 
 
-    public void sendData_v1() {
-        String mess = imageString;
-        try {
-            Client_send c1 = new Client_send();
-            c1.execute(mess);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    public void sendData_v2() {
-        String mess = imageString;
+    public void sendData_v1(String mess) {
         try {
             Client_send c1 = new Client_send();
             c1.execute(mess);
@@ -152,7 +148,8 @@ public class MainActivity3 extends AppCompatActivity {
     }
 
 
-    // Class gửi đi dữ liệu
+
+    // Class dùng để gửi đi dữ liệu
     class Client_send extends AsyncTask<String, Void, Void> {
         Socket s;
         PrintWriter writer;
@@ -161,7 +158,7 @@ public class MainActivity3 extends AppCompatActivity {
         protected Void doInBackground(String... voids) {
             try {
                 String mess = voids[0];
-                s = new Socket("192.168.1.2", 6862);
+                s = new Socket(ip, port);
                 writer = new PrintWriter(s.getOutputStream());
                 writer.write(mess);
                 writer.flush();
@@ -180,7 +177,6 @@ public class MainActivity3 extends AppCompatActivity {
             canvas = new Canvas(bitmap);
 
             canvas.drawColor(Color.WHITE);
-
 
             paint.setColor(DefaultColor);
             paint.setAntiAlias(true);
@@ -218,7 +214,7 @@ public class MainActivity3 extends AppCompatActivity {
 
             DrawPaintOnImg();
             convertImg_v1();
-            sendData_v1();
+            sendData_v1(imageString);
 
         }
         return super.onTouchEvent(event);
@@ -233,7 +229,7 @@ public class MainActivity3 extends AppCompatActivity {
             imageView.setImageBitmap(bitmap);
             canvas.drawColor(Color.WHITE);
             convertImg_v1();
-            sendData_v1();
+            sendData_v1(imageString);
         }
     }
 }
