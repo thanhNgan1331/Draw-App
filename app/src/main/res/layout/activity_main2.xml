@@ -8,17 +8,132 @@
     android:background="@color/white"
     android:orientation="horizontal">
 
-    <ImageButton
-        android:id="@+id/imageButton5"
-        android:layout_width="52dp"
-        android:layout_height="52dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:background="?android:attr/selectableItemBackground"
+    <LinearLayout
+        android:id="@+id/linearLayout3"
+        android:layout_width="300dp"
+        android:layout_height="60dp"
+        android:layout_marginStart="47dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="50dp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.375"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/turn_back"
+        app:layout_constraintTop_toTopOf="parent">
 
-        />
+        <ImageView
+            android:id="@+id/btnStylePen"
+            android:layout_width="264dp"
+            android:layout_height="32dp"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:src="@drawable/pen_tool" />
+
+        <ImageView
+            android:id="@+id/btnSizePen"
+            android:layout_width="264dp"
+            android:layout_height="32dp"
+            android:layout_margin="10dp"
+            android:layout_weight="1"
+            android:src="@drawable/adjust" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutSizeAndOpacity"
+        android:layout_width="300dp"
+        android:layout_height="540dp"
+
+        android:layout_marginTop="12dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.468"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayout3">
+
+        <LinearLayout
+            android:id="@+id/layoutSize"
+            android:layout_width="match_parent"
+            android:layout_height="77dp"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <LinearLayout
+                android:id="@+id/layoutTextSize"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/txtSize"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Size" />
+
+                <TextView
+                    android:id="@+id/txtCountSize"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="0"
+                    android:textAlignment="textEnd" />
+            </LinearLayout>
+
+            <SeekBar
+                android:id="@+id/seekBarSize"
+                android:max="30"
+                android:progress="10"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:background="@android:color/darker_gray" />
+        <LinearLayout
+            android:id="@+id/layoutOpacity"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:padding="10dp">
+
+            <LinearLayout
+                android:id="@+id/layoutTextOpacity"
+                android:layout_width="match_parent"
+                android:layout_height="40dp"
+                android:orientation="horizontal"
+                android:padding="10dp">
+
+                <TextView
+                    android:id="@+id/txtOpacity"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Opacity" />
+
+                <TextView
+                    android:id="@+id/txtCountOpacity"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="0"
+                    android:textAlignment="textEnd" />
+            </LinearLayout>
+
+            <SeekBar
+                android:id="@+id/seekBarOpacity"
+                android:max="100"
+                android:progress="90"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>
 
