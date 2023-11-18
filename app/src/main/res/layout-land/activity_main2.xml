@@ -5,19 +5,5 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".MainActivity2"
-    android:orientation="horizontal">
-
-    <ImageButton
-        android:id="@+id/imageButton5"
-        android:layout_width="52dp"
-        android:layout_height="48dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:background="@drawable/round_button"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/turn_back"
-
-        />
-</androidx.constraintlayout.widget.ConstraintLayout>
+    android:orientation="horizontal"/>
 

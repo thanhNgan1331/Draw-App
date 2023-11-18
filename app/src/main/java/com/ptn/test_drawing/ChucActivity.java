@@ -1,9 +1,5 @@
 package com.ptn.test_drawing;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.ContentResolver;
@@ -12,10 +8,10 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -28,14 +24,18 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
-import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.GridView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 import android.widget.SeekBar;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.ptn.test_drawing.ui.theme.CircleViewGroup;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -45,27 +45,26 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Stack;
 
 import yuku.ambilwarna.AmbilWarnaDialog;
 
-public class MainActivity extends AppCompatActivity {
+public class ChucActivity extends AppCompatActivity {
 
     // Initialize variable
     ImageView imageView, btnMenu, btnColor, btnPen, btnUndo, btnRedo;
-
-
+    ImageView btnDrawCircle, btnDrawSquare, btnDrawLine;
+    Switch switchActivePen;
     SeekBar seekBarSize, seekBarOpacity;
     TextView txtCountSize, txtCountOpacity;
-    LinearLayout layoutSizeAndOpacity;
+    LinearLayout layoutSizeAndOpacity, layoutDrawShape;
     private float startX = -1, startY = -1, endX = -1, endY = -1;
     private Bitmap bitmap;
     private Canvas canvas;
     private Paint paint = new Paint();
-
     Path path;
-
-
+    CircleViewGroup circleViewGroup;
+    RectangleView rectangleView;
+    int sizePen=5;
 
     String imageString;
     int DefaultColor = Color.BLACK;
@@ -78,7 +77,6 @@ public class MainActivity extends AppCompatActivity {
     private ArrayList<Path> paths = new ArrayList<Path>();
     private ArrayList<Path> undonePaths = new ArrayList<Path>();
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -86,7 +84,7 @@ public class MainActivity extends AppCompatActivity {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
-        setContentView(R.layout.activity_main3);
+        setContentView(R.layout.activity_chuc);
 
         imageView = findViewById(R.id.imageView);
         btnMenu = findViewById(R.id.btnMenu);
@@ -103,14 +101,40 @@ public class MainActivity extends AppCompatActivity {
         btnUndo.setEnabled(false);
         btnRedo.setEnabled(false);
 
+        circleViewGroup=new CircleViewGroup(this);
+        rectangleView=new RectangleView(this);
 
+        layoutDrawShape=findViewById(R.id.layoutDrawShape);
+
+        btnDrawCircle=findViewById(R.id.btnDrawCircle);
+        btnDrawSquare=findViewById(R.id.btnDrawSquare);
+        btnDrawLine=findViewById(R.id.btnDrawLine);
+
+        switchActivePen=findViewById(R.id.switchActivePen);
+        switchActivePen.setChecked(true);
+        switchActivePen.setActivated(true);
+        switchActivePen.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener()
+        {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+                if(isChecked)//nếu switch được kích hoat = ON
+                {
+                    // thay đổi giao diện của switch là ON
+                    switchActivePen.setActivated(true);
+                }
+                else
+                {
+                    switchActivePen.setActivated(false);
+                }
+            }
+
+        });
         btnUndo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 undoDraw();
             }
         });
-
         btnRedo.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -127,6 +151,7 @@ public class MainActivity extends AppCompatActivity {
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
                 txtCountSize.setText(progress + "");
                 paint.setStrokeWidth(progress);
+                sizePen = progress;
             }
 
             @Override
@@ -159,13 +184,17 @@ public class MainActivity extends AppCompatActivity {
 
         btnPen.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                if (layoutSizeAndOpacity.getVisibility() == View.VISIBLE) {
+            public void onClick(View v)
+            {
+                if (layoutSizeAndOpacity.getVisibility() == View.VISIBLE)
+                {
                     layoutSizeAndOpacity.setVisibility(View.GONE);
-                } else {
+                } else
+                {
                     layoutSizeAndOpacity.setVisibility(View.VISIBLE);
                     layoutSizeAndOpacity.bringToFront();
                 }
+
             }
         });
 
@@ -175,7 +204,28 @@ public class MainActivity extends AppCompatActivity {
                 showHide(v);
             }
         });
+        btnDrawCircle.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                layoutDrawShape.setVisibility(View.GONE);
+                Toast.makeText(ChucActivity.this, "open", Toast.LENGTH_SHORT).show();
+                circleViewGroup.draw(canvas);
+            }
 
+        });
+    btnDrawSquare.setOnClickListener(new View.OnClickListener() {
+    @Override
+    public void onClick(View view) {
+        layoutDrawShape.setVisibility(View.GONE);
+        CirclesDrawingView circlesDrawingView = new CirclesDrawingView(ChucActivity.this);
+
+        // Thêm CirclesDrawingView vào container
+    //    imageView.addView(circlesDrawingView);
+
+        // Vẽ CirclesDrawingView
+      //  circlesDrawingView.drawOnCanvas();
+    }
+});
         List<Item_draw> image_details = getListData();
         gridView = (GridView) findViewById(R.id.gridView);
         gridView.setAdapter(new CustomGridAdapter(this, image_details));
@@ -194,11 +244,13 @@ public class MainActivity extends AppCompatActivity {
                         btnOpenImage(v);
                         break;
                     case 2: // Shapes
+                        btnOpenShape(v);
                         break;
                     case 3: // Eraser
                         btnEraser(v);
                         break;
                     case 4: // Text
+                        btnText(v);
                         break;
                     case 5: // Exit
                         btnLogout(v);
@@ -295,7 +347,7 @@ public class MainActivity extends AppCompatActivity {
     // Hàm mở ColorPickerDialog
     private void OpenColorPickerDialog(boolean AlphaSupport) {
 
-        AmbilWarnaDialog ambilWarnaDialog = new AmbilWarnaDialog(MainActivity.this, DefaultColor, AlphaSupport, new AmbilWarnaDialog.OnAmbilWarnaListener() {
+        AmbilWarnaDialog ambilWarnaDialog = new AmbilWarnaDialog(ChucActivity.this, DefaultColor, AlphaSupport, new AmbilWarnaDialog.OnAmbilWarnaListener() {
             @Override
             public void onOk(AmbilWarnaDialog ambilWarnaDialog, int color) {
                 paint.setColor(color);
@@ -304,7 +356,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onCancel(AmbilWarnaDialog ambilWarnaDialog) {
 
-                Toast.makeText(MainActivity.this, "Color Picker Closed", Toast.LENGTH_SHORT).show();
+                Toast.makeText(ChucActivity.this, "Color Picker Closed", Toast.LENGTH_SHORT).show();
             }
         });
         ambilWarnaDialog.show();
@@ -337,15 +389,32 @@ public class MainActivity extends AppCompatActivity {
             OutputStream outputStream = contentResolver.openOutputStream(Objects.requireNonNull(uri));
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
             Objects.requireNonNull(outputStream);
-            Toast.makeText(MainActivity.this, "Lưu ảnh thành công", Toast.LENGTH_SHORT).show();
+            Toast.makeText(ChucActivity.this, "Lưu ảnh thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
-            Toast.makeText(MainActivity.this, "Lưu ảnh thất bại", Toast.LENGTH_SHORT).show();
+            Toast.makeText(ChucActivity.this, "Lưu ảnh thất bại", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
     }
     public void btnEraser(View v)
     {
+        switchActivePen.setChecked(false);
+    }
+    public void btnOpenShape(View v)
+    {
+        if (layoutDrawShape.getVisibility() == View.VISIBLE)
+        {
+            layoutDrawShape.setVisibility(View.GONE);
+        } else
+        {
+            layoutDrawShape.setVisibility(View.VISIBLE);
+            layoutDrawShape.bringToFront();
+        }
+    }
 
+
+    public void btnText(View v)
+    {
+        canvas.drawText("abc",100,100,paint);
     }
     public void convertImg_v1() {
         try {
@@ -429,7 +498,7 @@ public class MainActivity extends AppCompatActivity {
         btnRedo.setImageResource(R.drawable.redo_disable);
     }
 
-    private void DrawPaintOnImg() {
+    private void  DrawPaintOnImg() {
         if (bitmap == null) {
             bitmap = Bitmap.createBitmap(imageView.getWidth(), imageView.getHeight(), Bitmap.Config.ARGB_8888);
             canvas = new Canvas(bitmap);
@@ -460,20 +529,7 @@ public class MainActivity extends AppCompatActivity {
 
         imageView.setImageBitmap(bitmap);
 
-
-//        canvas.drawLine(startX,
-//                startY - 220,
-//                endX,
-//                endY - 220,
-//                paint);
-//        imageView.setImageBitmap(bitmap);
-
     }
-
-
-
-
-
     private void undoDraw() {
         if (paths.size() > 0) {
             undonePaths.add(paths.remove(paths.size() - 1));
@@ -514,35 +570,59 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        if (event.getAction() == MotionEvent.ACTION_DOWN) {
-            startX = event.getX();
-            startY = event.getY();
-            gridView.setVisibility(View.GONE);
-            layoutSizeAndOpacity.setVisibility(View.GONE);
-            undonePaths.clear();
-            setEnableUndo();
+    public boolean onTouchEvent(MotionEvent event)
+    {
+        if(switchActivePen.isActivated()==true)
+        {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                startX = event.getX();
+                startY = event.getY();
+                gridView.setVisibility(View.GONE);
+                layoutSizeAndOpacity.setVisibility(View.GONE);
+                undonePaths.clear();
+                setEnableUndo();
+            }
+            if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                endX = event.getX();
+                endY = event.getY();
+
+                DrawPaintOnImg();
+
+                startX = event.getX();
+                startY = event.getY();
+            }
+            if (event.getAction() == MotionEvent.ACTION_UP) {
+                endX = event.getX();
+                endY = event.getY();
+                paths.add(path);
+
+                sentImgage();
+            }
         }
-        if (event.getAction() == MotionEvent.ACTION_MOVE) {
-            endX = event.getX();
-            endY = event.getY();
+        else
+        {
+            float x,y;
+            paint.setStrokeWidth(sizePen);
+            paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
+            if (event.getAction() == MotionEvent.ACTION_DOWN)
+            {
+                x=event.getX();
+                y=event.getY();
+                canvas.drawCircle(x-100,y-170,sizePen/2,paint);
+            }
 
-            DrawPaintOnImg();
-
-            startX = event.getX();
-            startY = event.getY();
-        }
-        if (event.getAction() == MotionEvent.ACTION_UP) {
-            endX = event.getX();
-            endY = event.getY();
-            paths.add(path);
-
-            sentImgage();
-
-
+            if (event.getAction() == MotionEvent.ACTION_MOVE)
+            {
+                x=event.getX();
+                y=event.getY();
+                canvas.drawCircle(x-100,y-170,sizePen/2,paint);
+                imageView.invalidate();
+            }
+            paint.setXfermode(null);
         }
         return super.onTouchEvent(event);
     }
 
 
 }
+

@@ -71,6 +71,7 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
             }
         });
 
+
         btnConnect.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -121,7 +122,9 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
         }
     };
 
-    public void sendData_v3(String ip, int port) {
+
+    public void sendData_v3(String ip, int port)
+    {
         connectionTimer.start();
         String mess = "1";
         try {
@@ -132,7 +135,8 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
         }
     }
 
-    private class ConnectToServerTask extends AsyncTask<String, Void, Void> {
+    private class ConnectToServerTask extends AsyncTask<String, Void, Void>
+    {
         private String ip;
         private int port;
 
@@ -151,7 +155,7 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
             ) {
 
                 // Lấy dữ liệu từ EditText
-                String clientMessage = voids[0];
+                String clientMessage = voids[0];//là string "1": xác định client gửi yêu cầu kết nối tới server
 
                 // Gửi dữ liệu tới server
                 writer.println(clientMessage);
