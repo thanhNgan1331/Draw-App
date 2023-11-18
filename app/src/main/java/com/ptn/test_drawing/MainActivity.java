@@ -54,6 +54,7 @@ public class MainActivity extends AppCompatActivity {
     // Initialize variable
     ImageView imageView, btnMenu, btnColor, btnPen, btnUndo, btnRedo;
 
+    Button btnNew, btnOpen, btnSave, btnLogout;
 
     SeekBar seekBarSize, seekBarOpacity;
     TextView txtCountSize, txtCountOpacity;
@@ -99,6 +100,8 @@ public class MainActivity extends AppCompatActivity {
         txtCountOpacity = findViewById(R.id.txtCountOpacity);
         btnUndo = findViewById(R.id.btnUndo);
         btnRedo = findViewById(R.id.btnRedo);
+
+
 
         btnUndo.setEnabled(false);
         btnRedo.setEnabled(false);
