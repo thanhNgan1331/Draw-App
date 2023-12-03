@@ -1,25 +1,24 @@
 package com.ptn.test_drawing;
 
+import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
+import android.os.Handler;
 import android.provider.MediaStore;
-import android.util.Base64;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.GridView;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -27,12 +26,12 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.google.android.material.slider.RangeSlider;
+import com.ptn.test_drawing.itemL.CustomGridAdapter;
+import com.ptn.test_drawing.itemL.CustomListAdapter;
+import com.ptn.test_drawing.itemL.Item_draw;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
@@ -59,6 +58,11 @@ public class ActivityPaint extends AppCompatActivity {
 
     SeekBar seekBarSize, seekBarOpacity;
     TextView txtCountSize, txtCountOpacity;
+
+    String ip;
+    int port;
+
+    private ProgressDialog progressDialog;
 
 
     private List<Item_draw> getListData() {
@@ -103,7 +107,6 @@ public class ActivityPaint extends AppCompatActivity {
         setContentView(R.layout.activity_paint);
 
         layoutMenu = findViewById(R.id.layoutMenu);
-
         // getting the reference of the views from their ids
         paint = findViewById(R.id.draw_view);
         btnRedo = findViewById(R.id.btnRedo);
@@ -119,14 +122,19 @@ public class ActivityPaint extends AppCompatActivity {
         txtCountSize = findViewById(R.id.txtCountSize);
         txtCountOpacity = findViewById(R.id.txtCountOpacity);
         layoutSizeAndOpacity = findViewById(R.id.layoutSizeAndOpacity);
+        gridView = findViewById(R.id.gridView);
+        listView = (ListView) findViewById(R.id.listView);
+        paint.setObjectInActivity(gridView, listView, layoutSizeAndOpacity, btnUndo, btnRedo);
 
-        paint.setButtonRedo(btnRedo);
-        paint.setButtonUndo(btnUndo);
 
         layoutMenu.bringToFront();
 
         btnUndo.setEnabled(false);
         btnRedo.setEnabled(false);
+
+        Intent intent = getIntent();
+        ip = intent.getStringExtra("ip_key");
+        port = intent.getIntExtra("port_key", 6862);
 
         btnUndo.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -146,7 +154,6 @@ public class ActivityPaint extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 OpenColorPickerDialog(false);
-
             }
         });
 
@@ -158,7 +165,6 @@ public class ActivityPaint extends AppCompatActivity {
         });
 
         List<Item_draw> image_details = getListData();
-        gridView = findViewById(R.id.gridView);
         gridView.setAdapter(new CustomGridAdapter(this, image_details));
 
         // When the user clicks on the GridItem
@@ -179,9 +185,10 @@ public class ActivityPaint extends AppCompatActivity {
                     case 3: // Eraser
                         break;
                     case 4: // Text
+                        paint.addSticker();
                         break;
                     case 5: // Exit
-                        //btnLogout(v);
+                        btnLogout(v);
                         break;
 
                 }
@@ -189,7 +196,6 @@ public class ActivityPaint extends AppCompatActivity {
         });
 
         List<Item_draw> itemList = getListDataList();
-        listView = (ListView) findViewById(R.id.listView);
         listView.setAdapter(new CustomListAdapter(this, itemList));
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
@@ -200,14 +206,11 @@ public class ActivityPaint extends AppCompatActivity {
                         btnSaveImage(v);
                         break;
                     case 1: // Discard
-                        paint.newImage();
+                        showAlertDialog();
                         break;
                 }
             }
         });
-
-
-
 
 
         btnFullScreenHide.setOnClickListener(new View.OnClickListener() {
@@ -235,10 +238,9 @@ public class ActivityPaint extends AppCompatActivity {
                 paint.getViewTreeObserver().removeOnGlobalLayoutListener(this);
                 int width = paint.getMeasuredWidth();
                 int height = paint.getMeasuredHeight();
-                paint.init(height, width);
+                paint.init(height, width, ip, port);
             }
         });
-
 
         txtCountSize.setText(seekBarSize.getProgress() + "");
         txtCountOpacity.setText(seekBarOpacity.getProgress() + "");
@@ -308,7 +310,6 @@ public class ActivityPaint extends AppCompatActivity {
     public void btnOpenImage(View v) {
         Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
         startActivityForResult(intent, 3);
-
     }
 
     @Override
@@ -328,8 +329,24 @@ public class ActivityPaint extends AppCompatActivity {
         }
     }
 
+    public void btnImportText(View view) {
+        paint.addSticker();
+    }
+
+    public void btnLogout(View view) {
+        //sendData_v1("logout");
+        Intent intent = new Intent(this, ConnectToTheServerActivity.class);
+        startActivity(intent);
+        finish();
+    }
 
     public void btnSaveImage(View view) {
+        // Tạo và hiển thị ProgressDialog
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("Đang lưu ảnh...");
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.show();
+
         Uri images;
         Bitmap bitmap = paint.save();
         ContentResolver contentResolver = getContentResolver();
@@ -346,11 +363,50 @@ public class ActivityPaint extends AppCompatActivity {
             OutputStream outputStream = contentResolver.openOutputStream(Objects.requireNonNull(uri));
             bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
             Objects.requireNonNull(outputStream);
-            Toast.makeText(this, "Lưu ảnh thành công", Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
             Toast.makeText(this, "Lưu ảnh thất bại", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
+        finally {
+            // Đóng ProgressDialog sau một khoảng thời gian
+            new Handler().postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    progressDialog.dismiss();
+                    paint.newImage();
+                }
+            }, 1000);
+        }
+    }
+
+    private void showAlertDialog() {
+        // Tạo một đối tượng AlertDialog.Builder
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        // Thiết lập tiêu đề và thông điệp cho thông báo
+        builder.setTitle("Discard current Sketch");
+        builder.setMessage("You will lose your sketch if you discard it. Are you sure you want to discard?");
+
+        // Thiết lập nút OK và hành động khi nút đó được nhấn
+        builder.setPositiveButton("DISCARD", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Hành động khi nút OK được nhấn
+                paint.newImage();            }
+        });
+        // Thiết lập nút No và hành động khi nút đó được nhấn
+        builder.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Hành động khi nút No được nhấn
+                dialog.dismiss();
+            }
+        });
+
+
+        // Tạo và hiển thị AlertDialog
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
     }
 
 

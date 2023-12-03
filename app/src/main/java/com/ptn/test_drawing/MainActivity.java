@@ -1,18 +1,14 @@
 package com.ptn.test_drawing;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.CornerPathEffect;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PorterDuff;
@@ -28,14 +24,15 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.AdapterView;
-import android.widget.Button;
 import android.widget.GridView;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.ptn.test_drawing.itemL.CustomGridAdapter;
+import com.ptn.test_drawing.itemL.Item_draw;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -45,7 +42,6 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Stack;
 
 import yuku.ambilwarna.AmbilWarnaDialog;
 
@@ -53,8 +49,6 @@ public class MainActivity extends AppCompatActivity {
 
     // Initialize variable
     ImageView imageView, btnMenu, btnColor, btnPen, btnUndo, btnRedo;
-
-    Button btnNew, btnOpen, btnSave, btnLogout;
 
     SeekBar seekBarSize, seekBarOpacity;
     TextView txtCountSize, txtCountOpacity;
@@ -78,6 +72,9 @@ public class MainActivity extends AppCompatActivity {
 
     private ArrayList<Path> paths = new ArrayList<Path>();
     private ArrayList<Path> undonePaths = new ArrayList<Path>();
+
+    private ProgressDialog progressDialog;
+
 
 
     @Override
@@ -323,6 +320,12 @@ public class MainActivity extends AppCompatActivity {
 
     public void btnSaveImage(View view)
     {
+        // Tạo và hiển thị ProgressDialog
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setMessage("Đang lưu ảnh...");
+        progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+        progressDialog.show();
+
         Uri images;
         ContentResolver contentResolver = getContentResolver();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
@@ -344,6 +347,8 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             Toast.makeText(MainActivity.this, "Lưu ảnh thất bại", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
+        } finally {
+            progressDialog.dismiss();
         }
     }
     public void btnEraser(View v)

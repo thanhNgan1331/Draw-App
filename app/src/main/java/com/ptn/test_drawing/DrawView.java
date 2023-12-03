@@ -8,13 +8,20 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
+import android.text.Layout;
 import android.util.AttributeSet;
 import android.util.Base64;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
+import android.view.ViewGroup;
+import android.widget.GridView;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.ListView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -22,7 +29,17 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.ArrayList;
 
-public class DrawView extends View {
+import com.xiaopo.flying.sticker.BitmapStickerIcon;
+import com.xiaopo.flying.sticker.DeleteIconEvent;
+import com.xiaopo.flying.sticker.DrawableSticker;
+import com.xiaopo.flying.sticker.FlipHorizontallyEvent;
+import com.xiaopo.flying.sticker.Sticker;
+import com.xiaopo.flying.sticker.StickerView;
+import com.xiaopo.flying.sticker.TextSticker;
+import com.xiaopo.flying.sticker.ZoomIconEvent;
+import com.ptn.test_drawing.util.FileUtil;
+
+public class DrawView extends RelativeLayout {
 
     private static final float TOUCH_TOLERANCE = 4;
     private float mX, mY;
@@ -37,17 +54,23 @@ public class DrawView extends View {
 
     private int alpha;
     private Bitmap mBitmap;
-    private Bitmap openedImage;
 
     private Canvas mCanvas;
     private Paint mBitmapPaint = new Paint(Paint.DITHER_FLAG);
 
 
+
+    private boolean useEraser = false;
+    private boolean isBrushThicknessSliderVisible = false;
+    private boolean isEraserThicknessSliderVisible = false;
+
     ImageView imageView = new ImageView(getContext());
     String imageString;
-    String ip;
-    int port;
-
+    String ip = "127.0.0.0";
+    int port = 6862;
+    GridView gridView;
+    ListView listView;
+    LinearLayout layoutSizeAndOpacity;
 
     private ScaleGestureDetector scaleGestureDetector;
 
@@ -56,8 +79,13 @@ public class DrawView extends View {
     private static final float MIN_SCALE_FACTOR = 0.2f;
     private static final float MAX_SCALE_FACTOR = 5.0f;
 
+    private float pivotX = 0f, pivotY = 0f;
+
 
     ImageView btnUndo, btnRedo;
+    private View drawingView;
+
+    private StickerView stickerView = new StickerView(getContext());
 
 
     // Constructors to initialise all the attributes
@@ -78,12 +106,52 @@ public class DrawView extends View {
 
         mPaint.setAlpha(0);
 
+
+        drawingView = new View(context) {
+            @Override
+            protected void onDraw(Canvas canvas) {
+                canvas.save();
+
+                canvas.scale(scaleFactor, scaleFactor, pivotX, pivotY);
+
+
+                int backgroundColor = Color.WHITE;
+                mCanvas.drawColor(backgroundColor);
+
+                for (Stroke fp : paths) {
+                    mPaint.setColor(fp.color);
+                    mPaint.setStrokeWidth(fp.strokeWidth);
+                    mPaint.setAlpha(fp.alpha);
+                    mCanvas.drawPath(fp.path, mPaint);
+                }
+                canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
+                canvas.restore();
+            }
+        };
+        addView(drawingView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         scaleGestureDetector = new ScaleGestureDetector(context, new ScaleListener());
 
     }
 
-    public void init(int height, int width) {
 
+    public void addSticker() {
+
+        // Khởi tạo TextView
+        TextView textView = new TextView(getContext());
+
+        // Thiết lập các thuộc tính cho TextView
+        textView.setText("Hello, World!");
+        textView.setTextColor(Color.BLUE);
+        textView.setTextSize(18); // 18sp
+
+        this.addView(textView);
+
+    }
+
+    public void init(int height, int width, String ip, int port) {
+
+        this.ip = ip;
+        this.port = port;
         mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
 
@@ -93,6 +161,14 @@ public class DrawView extends View {
         alpha = 200;
     }
 
+    private boolean isTouchInsideView(float x, float y) {
+        // Xác định khu vực hợp lệ dựa trên scaleFactor và kích thước của View
+        float scaledWidth = drawingView.getWidth() * scaleFactor;
+        float scaledHeight = drawingView.getHeight() * scaleFactor;
+
+        // Kiểm tra xem tọa độ x, y có nằm trong khu vực này không
+        return x >= 0 && x <= scaledWidth && y >= 0 && y <= scaledHeight;
+    }
 
     public void setColor(int color) {
         currentColor = color;
@@ -106,18 +182,28 @@ public class DrawView extends View {
         alpha = opacity;
     }
 
-    public void setButtonUndo(ImageView btnUndo) {
+
+    public void setObjectInActivity(GridView gridView,
+                                    ListView listView,
+                                    LinearLayout layoutSizeAndOpacity,
+                                    ImageView btnUndo,
+                                    ImageView btnRedo) {
+        this.gridView = gridView;
+        this.listView = listView;
+        this.layoutSizeAndOpacity = layoutSizeAndOpacity;
         this.btnUndo = btnUndo;
-    }
-    public void setButtonRedo(ImageView btnRedo) {
         this.btnRedo = btnRedo;
     }
+
+
+
+
 
     public void undo() {
         if (paths.size() != 0) {
             redoPaths.add(paths.remove(paths.size() - 1));
             setEnableRedo();
-            invalidate();
+            drawingView.invalidate();
             Log.d("SentImage", "Image:" + mBitmap);
             sentImgage();
 
@@ -131,7 +217,7 @@ public class DrawView extends View {
     public void redo() {
         if (redoPaths.size() != 0) {
             paths.add(redoPaths.remove(redoPaths.size() - 1));
-            invalidate();
+            drawingView.invalidate();
             Log.d("SentImage", "Image:" + mBitmap);
             sentImgage();
 
@@ -142,15 +228,6 @@ public class DrawView extends View {
                 setEnableUndo();
             }
         }
-    }
-
-
-    public int getSizeUndo() {
-        return paths.size();
-    }
-
-    public int getSizeRedo() {
-        return redoPaths.size();
     }
 
 
@@ -171,7 +248,10 @@ public class DrawView extends View {
         paths.clear();
         redoPaths.clear();
         // Vẽ lại view
-        invalidate();
+        drawingView.invalidate();
+        setUnableRedo();
+        setUnableUndo();
+        listView.setVisibility(GONE);
     }
 
 
@@ -187,33 +267,37 @@ public class DrawView extends View {
             // Giới hạn giá trị scaleFactor để tránh phóng to quá mức hoặc thu nhỏ quá mức
             scaleFactor = Math.max(MIN_SCALE_FACTOR, Math.min(MAX_SCALE_FACTOR, scaleFactor));
 
-            invalidate(); // Vẽ lại khi có sự thay đổi
+            // Cập nhật điểm neo dựa trên vị trí chạm của ScaleGestureDetector
+            pivotX = detector.getFocusX();
+            pivotY = detector.getFocusY();
+
+            drawingView.invalidate(); // Vẽ lại khi có sự thay đổi
             return true;
         }
     }
 
     // this is the main method where
     // the actual drawing takes place
-    @Override
-    protected void onDraw(Canvas canvas) {
-
-        canvas.save();
-
-        canvas.scale(scaleFactor, scaleFactor);
-
-
-        int backgroundColor = Color.WHITE;
-        mCanvas.drawColor(backgroundColor);
-
-        for (Stroke fp : paths) {
-            mPaint.setColor(fp.color);
-            mPaint.setStrokeWidth(fp.strokeWidth);
-            mPaint.setAlpha(fp.alpha);
-            mCanvas.drawPath(fp.path, mPaint);
-        }
-        canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
-        canvas.restore();
-    }
+//    @Override
+//    protected void onDraw(Canvas canvas) {
+//
+//        canvas.save();
+//
+//        canvas.scale(scaleFactor, scaleFactor);
+//
+//
+//        int backgroundColor = Color.WHITE;
+//        mCanvas.drawColor(backgroundColor);
+//
+//        for (Stroke fp : paths) {
+//            mPaint.setColor(fp.color);
+//            mPaint.setStrokeWidth(fp.strokeWidth);
+//            mPaint.setAlpha(fp.alpha);
+//            mCanvas.drawPath(fp.path, mPaint);
+//        }
+//        canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
+//        canvas.restore();
+//    }
 
 
     private void touchStart(float x, float y) {
@@ -222,16 +306,12 @@ public class DrawView extends View {
         paths.add(fp);
         redoPaths.clear();
 
-        // finally remove any curve
-        // or line from the path
+
         mPath.reset();
 
-        // this methods sets the starting
-        // point of the line being drawn
+
         mPath.moveTo(x, y);
 
-        // we save the current
-        // coordinates of the finger
         mX = x;
         mY = y;
     }
@@ -262,22 +342,27 @@ public class DrawView extends View {
         float x = event.getX();
         float y = event.getY();
 
-        switch (event.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                touchStart(x, y);
-                invalidate();
-                setEnableUndo();
-                break;
-            case MotionEvent.ACTION_MOVE:
-                touchMove(x, y);
-                invalidate();
-                break;
-            case MotionEvent.ACTION_UP:
-                touchUp();
-                sentImgage();
-                Log.d("SentImage", "Image:" + mBitmap);
-                invalidate();
-                break;
+        if (isTouchInsideView(x, y)) {
+            switch (event.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    touchStart(x, y);
+                    drawingView.invalidate();
+                    setEnableUndo();
+                    gridView.setVisibility(View.GONE);
+                    listView.setVisibility(View.GONE);
+                    layoutSizeAndOpacity.setVisibility(View.GONE);
+                    break;
+                case MotionEvent.ACTION_MOVE:
+                    touchMove(x, y);
+                    drawingView.invalidate();
+                    break;
+                case MotionEvent.ACTION_UP:
+                    touchUp();
+                    sentImgage();
+                    Log.d("SentImage", "Image:" + mBitmap);
+                    drawingView.invalidate();
+                    break;
+            }
         }
         return true;
     }
@@ -293,7 +378,6 @@ public class DrawView extends View {
             e.printStackTrace();
         }
     }
-
 
 
     public void sendData_v1(String mess) {
@@ -320,7 +404,7 @@ public class DrawView extends View {
         protected Void doInBackground(String... voids) {
             try {
                 String mess = voids[0];
-                s = new Socket("192.168.1.3", 6862);
+                s = new Socket(ip, port);
                 writer = new PrintWriter(s.getOutputStream());
                 writer.write(mess);
                 writer.flush();

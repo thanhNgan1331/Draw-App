@@ -26,15 +26,15 @@ import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.CompoundButton;
 import android.widget.GridView;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.ptn.test_drawing.itemL.CustomGridAdapter;
+import com.ptn.test_drawing.itemL.Item_draw;
 import com.ptn.test_drawing.ui.theme.CircleViewGroup;
 
 import java.io.ByteArrayOutputStream;

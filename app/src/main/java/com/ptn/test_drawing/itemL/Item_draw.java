@@ -1,4 +1,4 @@
-package com.ptn.test_drawing;
+package com.ptn.test_drawing.itemL;
 
 public class Item_draw {
 

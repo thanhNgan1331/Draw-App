@@ -95,7 +95,7 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
         txtContinueWithoutConnection.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Intent intent = new Intent(ConnectToTheServerActivity.this, MainActivity.class);
+                Intent intent = new Intent(ConnectToTheServerActivity.this, ActivityPaint.class);
                 // Bắt đầu Activity mới
                 startActivity(intent);
             }
@@ -165,7 +165,7 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
                 String responseMessage = reader.readLine();
                 if (responseMessage.equals("OK")) {
                     // Tạo Intent để mở Activity mới
-                    Intent intent = new Intent(ConnectToTheServerActivity.this, MainActivity.class);
+                    Intent intent = new Intent(ConnectToTheServerActivity.this, ActivityPaint.class);
                     // Đính kèm địa chỉ Ip và Port vào Intent
                     intent.putExtra("ip_key", ip);
                     intent.putExtra("port_key", port);
