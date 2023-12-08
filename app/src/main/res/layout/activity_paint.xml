@@ -7,31 +7,14 @@
     android:background="#D3D0D1"
     tools:context=".ActivityPaint">
 
-    <GridView
-        android:id="@+id/gridView"
-        android:layout_width="233dp"
-        android:layout_height="175dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="8dp"
-        android:numColumns="3"
-        android:paddingHorizontal="5dp"
-        android:paddingVertical="5dp"
-        android:stretchMode="columnWidth"
-        android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
-
-
-        app:layout_constraintHorizontal_bias="0.493"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/layoutMenu" />
 
     <LinearLayout
         android:id="@+id/layoutSizeAndOpacity"
-        android:layout_width="300dp"
-        android:layout_height="540dp"
+        android:layout_width="301dp"
+        android:layout_height="164dp"
 
         android:layout_marginTop="12dp"
-        android:background="#E3D7D7"
+        android:background="#E0E0E0"
         android:orientation="vertical"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
@@ -42,7 +25,7 @@
         <LinearLayout
             android:id="@+id/layoutSize"
             android:layout_width="match_parent"
-            android:layout_height="77dp"
+            android:layout_height="80dp"
             android:orientation="vertical"
             android:padding="10dp">
 
@@ -88,7 +71,7 @@
         <LinearLayout
             android:id="@+id/layoutOpacity"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="80dp"
             android:orientation="vertical"
             android:padding="10dp">
 
@@ -123,8 +106,8 @@
                 android:id="@+id/seekBarOpacity"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:max="255"
-                android:progress="200" />
+                android:max="100"
+                android:progress="95" />
 
         </LinearLayout>
 
@@ -197,14 +180,14 @@
             android:src="@drawable/color" />
 
         <ImageView
-            android:id="@+id/btnNew"
+            android:id="@+id/btnEraser"
             android:clickable="true"
             android:background="@drawable/selector_btn_menu"
             android:layout_width="32dp"
             android:layout_height="32dp"
             android:layout_margin="10dp"
             android:layout_weight="1"
-            android:src="@drawable/new_page"
+            android:src="@drawable/eraser"
             tools:ignore="SpeakableTextPresentCheck" />
 
         <ImageView
@@ -235,6 +218,17 @@
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="SpeakableTextPresentCheck" />
 
+    <ListView
+        android:id="@+id/listMenu"
+        android:layout_width="200dp"
+        android:layout_height="305dp"
+        android:background="#E0E0E0"
+        android:divider="@drawable/border_listview"
+        android:dividerHeight="1dp"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/layoutMenu" />
+
     <com.ptn.test_drawing.DrawView
         android:id="@+id/draw_view"
         android:layout_width="match_parent"
@@ -244,13 +238,15 @@
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0.889" />
+        app:layout_constraintVertical_bias="0.889" >
+
+    </com.ptn.test_drawing.DrawView>
 
     <ListView
         android:id="@+id/listView"
         android:layout_width="193dp"
         android:layout_height="108dp"
         android:visibility="gone"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/layoutMenu" />
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -56,7 +56,7 @@ public class CustomListAdapter  extends BaseAdapter {
         }
 
         Item_draw itemdraw = this.listData.get(position);
-        holder.itemName.setText(capitalizeFirstLetter(itemdraw.getitemName()));
+        holder.itemName.setText(capitalizeFirstLetter(getSubstringBeforeUnderscore(itemdraw.getitemName())));
         int imageId = this.getMipmapResIdByName(itemdraw.getitemName());
 
         holder.itemView.setImageResource(imageId);
@@ -69,6 +69,14 @@ public class CustomListAdapter  extends BaseAdapter {
             return input;
         }
         return Character.toUpperCase(input.charAt(0)) + input.substring(1).toLowerCase();
+    }
+
+    public static String getSubstringBeforeUnderscore(String input) {
+        if (input == null || input.isEmpty()) {
+            return input;
+        }
+        String[] parts = input.split("_");
+        return parts[0];
     }
 
     public int getMipmapResIdByName(String resName)  {

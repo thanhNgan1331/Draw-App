@@ -8,6 +8,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Color;
+import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -46,14 +47,13 @@ public class ActivityPaint extends AppCompatActivity {
 
     private DrawView paint;
 
-    private ImageView btnUndo, btnRedo, btnColor, btnPen, btnMenu, btnNew, btnFullScreenHide, btnFullScreenShow;
+    private ImageView btnUndo, btnRedo, btnColor, btnPen, btnMenu, btnEraser, btnFullScreenHide, btnFullScreenShow;
 
     LinearLayout layoutMenu;
 
     int DefaultColor = Color.BLACK;
 
-    GridView gridView;
-    ListView listView;
+    ListView listView, listMenu;
     LinearLayout layoutSizeAndOpacity;
 
     SeekBar seekBarSize, seekBarOpacity;
@@ -65,24 +65,27 @@ public class ActivityPaint extends AppCompatActivity {
     private ProgressDialog progressDialog;
 
 
-    private List<Item_draw> getListData() {
+
+    private List<Item_draw> getListDataMenu() {
         List<Item_draw> list = new ArrayList<Item_draw>();
+        Item_draw newImage = new Item_draw("new_page");
         Item_draw save = new Item_draw("save");
-        Item_draw shapes = new Item_draw("shapes");
-        Item_draw eraser = new Item_draw("eraser");
+        Item_draw openImage = new Item_draw("image");
         Item_draw text = new Item_draw("text");
-        Item_draw importImage = new Item_draw("image");
+        Item_draw shapes = new Item_draw("shapes");
         Item_draw exit = new Item_draw("exit");
 
+        list.add(newImage);
         list.add(save);
-        list.add(importImage);
-        list.add(shapes);
-        list.add(eraser);
+        list.add(openImage);
         list.add(text);
+        list.add(shapes);
         list.add(exit);
+
 
         return list;
     }
+
 
 
     private List<Item_draw> getListDataList() {
@@ -114,7 +117,7 @@ public class ActivityPaint extends AppCompatActivity {
         btnColor = findViewById(R.id.btnColor);
         btnMenu = findViewById(R.id.btnMenu);
         btnPen = findViewById(R.id.btnPen);
-        btnNew = findViewById(R.id.btnNew);
+        btnEraser = findViewById(R.id.btnEraser);
         btnFullScreenHide = findViewById(R.id.btnFullScreenHide);
         btnFullScreenShow = findViewById(R.id.btnFullScreenShow);
         seekBarSize = findViewById(R.id.seekBarSize);
@@ -122,9 +125,9 @@ public class ActivityPaint extends AppCompatActivity {
         txtCountSize = findViewById(R.id.txtCountSize);
         txtCountOpacity = findViewById(R.id.txtCountOpacity);
         layoutSizeAndOpacity = findViewById(R.id.layoutSizeAndOpacity);
-        gridView = findViewById(R.id.gridView);
-        listView = (ListView) findViewById(R.id.listView);
-        paint.setObjectInActivity(gridView, listView, layoutSizeAndOpacity, btnUndo, btnRedo);
+        listView = findViewById(R.id.listView);
+        listMenu = findViewById(R.id.listMenu);
+        paint.setObjectInActivity(listMenu, listView, layoutSizeAndOpacity, btnUndo, btnRedo);
 
 
         layoutMenu.bringToFront();
@@ -149,10 +152,10 @@ public class ActivityPaint extends AppCompatActivity {
             }
         });
 
-
         btnColor.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+
                 OpenColorPickerDialog(false);
             }
         });
@@ -160,40 +163,11 @@ public class ActivityPaint extends AppCompatActivity {
         btnMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                layoutSizeAndOpacity.setVisibility(View.GONE);
                 showHide(v);
             }
         });
 
-        List<Item_draw> image_details = getListData();
-        gridView.setAdapter(new CustomGridAdapter(this, image_details));
-
-        // When the user clicks on the GridItem
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-                Object o = gridView.getItemAtPosition(position);
-                Item_draw itemdraw = (Item_draw) o;
-                switch (position) {
-                    case 0: // Save
-                        btnSaveImage(v);
-                        break;
-                    case 1: // Import Image
-                        btnOpenImage(v);
-                        break;
-                    case 2: // Shapes
-                        break;
-                    case 3: // Eraser
-                        break;
-                    case 4: // Text
-                        paint.addSticker();
-                        break;
-                    case 5: // Exit
-                        btnLogout(v);
-                        break;
-
-                }
-            }
-        });
 
         List<Item_draw> itemList = getListDataList();
         listView.setAdapter(new CustomListAdapter(this, itemList));
@@ -211,6 +185,36 @@ public class ActivityPaint extends AppCompatActivity {
                 }
             }
         });
+
+
+        List<Item_draw> itemMenu = getListDataMenu();
+        listMenu.setAdapter(new CustomListAdapter(this, itemMenu));
+        listMenu.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> a, View v, int position, long id) {
+                Object o = listMenu.getItemAtPosition(position);
+                switch (position) {
+                    case 0: // New page
+                        // btnSaveImage(v);
+                        break;
+                    case 1: // Save
+                        btnSaveImage(v);
+                        break;
+                    case 2: // Open Image
+                        btnOpenImage(v);
+                        break;
+                    case 3: // Text
+                        paint.addSticker();
+                        break;
+                    case 4: // Shapes
+                        break;
+                    case 5: // Exit
+                        btnLogout(v);
+                        break;
+                }
+            }
+        });
+
 
 
         btnFullScreenHide.setOnClickListener(new View.OnClickListener() {
@@ -243,7 +247,7 @@ public class ActivityPaint extends AppCompatActivity {
         });
 
         txtCountSize.setText(seekBarSize.getProgress() + "");
-        txtCountOpacity.setText(seekBarOpacity.getProgress() + "");
+        txtCountOpacity.setText(seekBarOpacity.getProgress() + "%");
 
         seekBarSize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -265,8 +269,10 @@ public class ActivityPaint extends AppCompatActivity {
         seekBarOpacity.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                txtCountOpacity.setText(progress + "");
-                paint.setAlpha(progress);
+
+                int percentage = (int) ((progress * 255) / 100.0);
+                txtCountOpacity.setText(progress + "%");
+                paint.setAlpha(percentage);
             }
 
             @Override
@@ -284,6 +290,7 @@ public class ActivityPaint extends AppCompatActivity {
         btnPen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                listMenu.setVisibility(View.GONE);
                 if (layoutSizeAndOpacity.getVisibility() == View.VISIBLE) {
                     layoutSizeAndOpacity.setVisibility(View.GONE);
                 } else {
@@ -293,15 +300,10 @@ public class ActivityPaint extends AppCompatActivity {
             }
         });
 
-        btnNew.setOnClickListener(new View.OnClickListener() {
+        btnEraser.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (listView.getVisibility() == View.VISIBLE) {
-                    listView.setVisibility(View.GONE);
-                } else {
-                    listView.setVisibility(View.VISIBLE);
-                    listView.bringToFront();
-                }
+                // paint.setEraser();
             }
         });
 
@@ -318,11 +320,8 @@ public class ActivityPaint extends AppCompatActivity {
         if (resultCode == RESULT_OK && data != null) {
             Uri selectedImage = data.getData();
             try {
-                // Lấy ảnh từ Gallery
-                Bitmap selectedBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImage);
-                paint.open(selectedBitmap);
-
-
+                Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImage);
+                paint.setImageBackground(bitmap);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -412,11 +411,11 @@ public class ActivityPaint extends AppCompatActivity {
 
     // Hàm ẩn hiện gridview
     public void showHide(View view) {
-        if (gridView.getVisibility() == View.VISIBLE) {
-            gridView.setVisibility(View.GONE);
-        } else {
-            gridView.setVisibility(View.VISIBLE);
-            gridView.bringToFront();
+        if (listMenu.getVisibility() == View.VISIBLE) {
+            listMenu.setVisibility(View.GONE);
+        } else{
+            listMenu.setVisibility(View.VISIBLE);
+            listMenu.bringToFront();
         }
     }
 

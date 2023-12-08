@@ -44,10 +44,9 @@ public class DrawView extends RelativeLayout {
     private static final float TOUCH_TOLERANCE = 4;
     private float mX, mY;
     private Path mPath;
-
     private Paint mPaint;
-    private ArrayList<Stroke> paths = new ArrayList<>();
-    private ArrayList<Stroke> redoPaths = new ArrayList<>();
+    private ArrayList<Stroke> paths = new ArrayList<>(); // Lưu các stroke đã vẽ
+    private ArrayList<Stroke> redoPaths = new ArrayList<>(); // Lưu các stroke đã undo
 
     private int currentColor;
     private int strokeWidth;
@@ -59,7 +58,6 @@ public class DrawView extends RelativeLayout {
     private Paint mBitmapPaint = new Paint(Paint.DITHER_FLAG);
 
 
-
     private boolean useEraser = false;
     private boolean isBrushThicknessSliderVisible = false;
     private boolean isEraserThicknessSliderVisible = false;
@@ -68,8 +66,7 @@ public class DrawView extends RelativeLayout {
     String imageString;
     String ip = "127.0.0.0";
     int port = 6862;
-    GridView gridView;
-    ListView listView;
+    ListView listView, listMenu;
     LinearLayout layoutSizeAndOpacity;
 
     private ScaleGestureDetector scaleGestureDetector;
@@ -87,8 +84,6 @@ public class DrawView extends RelativeLayout {
 
     private StickerView stickerView = new StickerView(getContext());
 
-
-    // Constructors to initialise all the attributes
     public DrawView(Context context) {
         this(context, null);
     }
@@ -99,21 +94,20 @@ public class DrawView extends RelativeLayout {
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
         mPaint.setDither(true);
-        mPaint.setColor(Color.GREEN);
         mPaint.setStyle(Paint.Style.STROKE);
         mPaint.setStrokeJoin(Paint.Join.ROUND);
         mPaint.setStrokeCap(Paint.Cap.ROUND);
-
-        mPaint.setAlpha(0);
-
 
         drawingView = new View(context) {
             @Override
             protected void onDraw(Canvas canvas) {
                 canvas.save();
-
                 canvas.scale(scaleFactor, scaleFactor, pivotX, pivotY);
 
+                // Vẽ ảnh nền nếu có
+                if (mBitmap != null) {
+                    canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
+                }
 
                 int backgroundColor = Color.WHITE;
                 mCanvas.drawColor(backgroundColor);
@@ -149,14 +143,11 @@ public class DrawView extends RelativeLayout {
     }
 
     public void init(int height, int width, String ip, int port) {
-
         this.ip = ip;
         this.port = port;
         mBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
         mCanvas = new Canvas(mBitmap);
-
         currentColor = Color.RED;
-
         strokeWidth = 10;
         alpha = 200;
     }
@@ -170,6 +161,7 @@ public class DrawView extends RelativeLayout {
         return x >= 0 && x <= scaledWidth && y >= 0 && y <= scaledHeight;
     }
 
+
     public void setColor(int color) {
         currentColor = color;
     }
@@ -182,22 +174,17 @@ public class DrawView extends RelativeLayout {
         alpha = opacity;
     }
 
-
-    public void setObjectInActivity(GridView gridView,
+    public void setObjectInActivity(ListView listMenu,
                                     ListView listView,
                                     LinearLayout layoutSizeAndOpacity,
                                     ImageView btnUndo,
                                     ImageView btnRedo) {
-        this.gridView = gridView;
+        this.listMenu = listMenu;
         this.listView = listView;
         this.layoutSizeAndOpacity = layoutSizeAndOpacity;
         this.btnUndo = btnUndo;
         this.btnRedo = btnRedo;
     }
-
-
-
-
 
     public void undo() {
         if (paths.size() != 0) {
@@ -231,7 +218,7 @@ public class DrawView extends RelativeLayout {
     }
 
 
-    // this methods returns the current bitmap
+    // Lưu nội dung của view vào bitmap
     public Bitmap save() {
         return mBitmap;
     }
@@ -242,6 +229,16 @@ public class DrawView extends RelativeLayout {
         // Vẽ lại view
         invalidate();
     }
+
+    public void setImageBackground(Bitmap bitmap) {
+        // Đặt bitmap làm nền cho việc vẽ
+        if (bitmap != null) {
+            mBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+            mCanvas = new Canvas(mBitmap);
+            drawingView.invalidate(); // Yêu cầu vẽ lại view
+        }
+    }
+
 
     public void newImage() {
         // Xóa hết các stroke đã vẽ
@@ -255,9 +252,6 @@ public class DrawView extends RelativeLayout {
     }
 
 
-    public ImageView getImageView() {
-        return imageView;
-    }
 
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
         @Override
@@ -276,42 +270,14 @@ public class DrawView extends RelativeLayout {
         }
     }
 
-    // this is the main method where
-    // the actual drawing takes place
-//    @Override
-//    protected void onDraw(Canvas canvas) {
-//
-//        canvas.save();
-//
-//        canvas.scale(scaleFactor, scaleFactor);
-//
-//
-//        int backgroundColor = Color.WHITE;
-//        mCanvas.drawColor(backgroundColor);
-//
-//        for (Stroke fp : paths) {
-//            mPaint.setColor(fp.color);
-//            mPaint.setStrokeWidth(fp.strokeWidth);
-//            mPaint.setAlpha(fp.alpha);
-//            mCanvas.drawPath(fp.path, mPaint);
-//        }
-//        canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
-//        canvas.restore();
-//    }
-
 
     private void touchStart(float x, float y) {
         mPath = new Path();
         Stroke fp = new Stroke(currentColor, strokeWidth, mPath, alpha);
         paths.add(fp);
         redoPaths.clear();
-
-
         mPath.reset();
-
-
         mPath.moveTo(x, y);
-
         mX = x;
         mY = y;
     }
@@ -348,7 +314,7 @@ public class DrawView extends RelativeLayout {
                     touchStart(x, y);
                     drawingView.invalidate();
                     setEnableUndo();
-                    gridView.setVisibility(View.GONE);
+                    listMenu.setVisibility(View.GONE);
                     listView.setVisibility(View.GONE);
                     layoutSizeAndOpacity.setVisibility(View.GONE);
                     break;
@@ -415,7 +381,6 @@ public class DrawView extends RelativeLayout {
             return null;
         }
     }
-
 
     private void setEnableUndo() {
         btnUndo.setEnabled(true);
