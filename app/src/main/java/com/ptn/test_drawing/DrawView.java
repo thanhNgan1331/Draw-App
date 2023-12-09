@@ -6,6 +6,7 @@ import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
 import android.graphics.Path;
+import android.graphics.Rect;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.AsyncTask;
 import android.text.Layout;
@@ -22,6 +23,10 @@ import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
+
+import androidx.compose.ui.graphics.Outline;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -41,6 +46,7 @@ import com.ptn.test_drawing.util.FileUtil;
 
 public class DrawView extends RelativeLayout {
 
+    boolean isErasing=false;
     private static final float TOUCH_TOLERANCE = 4;
     private float mX, mY;
     private Path mPath;
@@ -50,7 +56,7 @@ public class DrawView extends RelativeLayout {
 
     private int currentColor;
     private int strokeWidth;
-
+    int sizePen;
     private int alpha;
     private Bitmap mBitmap;
 
@@ -58,7 +64,11 @@ public class DrawView extends RelativeLayout {
     private Paint mBitmapPaint = new Paint(Paint.DITHER_FLAG);
 
 
-    private boolean useEraser = false;
+    private boolean drawShape = false;//kiểm tra trạng thái vẽ Shape
+    private boolean finalDrawRectShapeStatus=false;//=true khi touch_up, dùng để xác định hình dáng cuối cùng của hcn được tạo ra khi touch_move
+    private float startRectShapeX,startRectShapeY;//tọa độ điểm cố định khi vẽ hình chữ nhật
+    private ArrayList<Rect> rectShapePaths = new ArrayList<>();//mảng tạm chứa các đối tượng Rect được tạo ra khi touch_move
+    private ArrayList<Rect> finalRectShapePaths = new ArrayList<>();//mảng chứa các đối tượng Rect hiện có trên màn hình
     private boolean isBrushThicknessSliderVisible = false;
     private boolean isEraserThicknessSliderVisible = false;
 
@@ -88,6 +98,8 @@ public class DrawView extends RelativeLayout {
         this(context, null);
     }
 
+
+
     public DrawView(Context context, AttributeSet attrs) {
         super(context, attrs);
 
@@ -101,6 +113,7 @@ public class DrawView extends RelativeLayout {
         drawingView = new View(context) {
             @Override
             protected void onDraw(Canvas canvas) {
+
                 canvas.save();
                 canvas.scale(scaleFactor, scaleFactor, pivotX, pivotY);
 
@@ -111,20 +124,45 @@ public class DrawView extends RelativeLayout {
 
                 int backgroundColor = Color.WHITE;
                 mCanvas.drawColor(backgroundColor);
-
                 for (Stroke fp : paths) {
-                    mPaint.setColor(fp.color);
-                    mPaint.setStrokeWidth(fp.strokeWidth);
-                    mPaint.setAlpha(fp.alpha);
+
+                    if (fp.useErase) {
+                        mPaint.setStrokeWidth(fp.strokeWidth);
+                        mPaint.setColor(Color.WHITE);
+                        //  mPaint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.CLEAR));
+                    } else {
+                        mPaint.setColor(fp.color);
+                        mPaint.setStrokeWidth(fp.strokeWidth);
+                        mPaint.setAlpha(fp.alpha);
+                        mPaint.setXfermode(null); // Đặt lại chế độ mặc định
+                    }
                     mCanvas.drawPath(fp.path, mPaint);
                 }
-                canvas.drawBitmap(mBitmap, 0, 0, mBitmapPaint);
-                canvas.restore();
-            }
+
+                if (rectShapePaths.size() > 0) //vẫn đang ở sự kiện touch_move
+                {
+                    Rect lastRect = rectShapePaths.get(rectShapePaths.size() - 1);
+                    mCanvas.drawRect(lastRect, mPaint);//chỉ vẽ hcn ở vị trí đang chạm
+                }
+                if (finalDrawRectShapeStatus == true) //khi ở sự kiện touch_up
+                {
+                    Rect lastRect = rectShapePaths.get(rectShapePaths.size() - 1);
+                    finalRectShapePaths.add(lastRect);//thêm hcn vào final paths
+                    rectShapePaths.clear();//xóa toàn bộ nội dung của arraylist tạm
+                    finalDrawRectShapeStatus = false;
+                }
+                for (Rect rect : finalRectShapePaths)//vẽ lại toàn bộ hcn hiện có trên màn hình
+                {
+                    mCanvas.drawRect(rect, mPaint);
+                }
+                    // canvas.drawBitmap(mBitmap, 0, 0, mPaint);
+                    canvas.restore();
+                }
+
+
         };
         addView(drawingView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
         scaleGestureDetector = new ScaleGestureDetector(context, new ScaleListener());
-
     }
 
 
@@ -167,7 +205,9 @@ public class DrawView extends RelativeLayout {
     }
 
     public void setStrokeWidth(int width) {
+
         strokeWidth = width;
+        sizePen=width;
     }
 
     public void setAlpha(int opacity) {
@@ -273,8 +313,17 @@ public class DrawView extends RelativeLayout {
 
     private void touchStart(float x, float y) {
         mPath = new Path();
-        Stroke fp = new Stroke(currentColor, strokeWidth, mPath, alpha);
-        paths.add(fp);
+        if(isErasing==false)
+        {
+            Stroke fp = new Stroke(currentColor, strokeWidth, mPath, alpha);
+            paths.add(fp);
+        }
+        else
+        {
+            Stroke fp = new Stroke(Color.BLUE, strokeWidth, mPath, 0);
+            fp.useErase=true;
+            paths.add(fp);
+        }
         redoPaths.clear();
         mPath.reset();
         mPath.moveTo(x, y);
@@ -297,8 +346,8 @@ public class DrawView extends RelativeLayout {
 
     private void touchUp() {
         mPath.lineTo(mX, mY);
+      //  mPath.reset();
     }
-
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
@@ -309,31 +358,53 @@ public class DrawView extends RelativeLayout {
         float y = event.getY();
 
         if (isTouchInsideView(x, y)) {
-            switch (event.getAction()) {
-                case MotionEvent.ACTION_DOWN:
-                    touchStart(x, y);
-                    drawingView.invalidate();
-                    setEnableUndo();
-                    listMenu.setVisibility(View.GONE);
-                    listView.setVisibility(View.GONE);
-                    layoutSizeAndOpacity.setVisibility(View.GONE);
-                    break;
-                case MotionEvent.ACTION_MOVE:
-                    touchMove(x, y);
-                    drawingView.invalidate();
-                    break;
-                case MotionEvent.ACTION_UP:
-                    touchUp();
-                    sentImgage();
-                    Log.d("SentImage", "Image:" + mBitmap);
-                    drawingView.invalidate();
-                    break;
+            if (drawShape == false) {
+
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        touchStart(x, y);
+                        drawingView.invalidate();
+                        setEnableUndo();
+                        listMenu.setVisibility(View.GONE);
+                        listView.setVisibility(View.GONE);
+                        layoutSizeAndOpacity.setVisibility(View.GONE);
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        touchMove(x, y);
+                        drawingView.invalidate();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        touchUp();
+                        sentImgage();
+                        drawingView.invalidate();
+                        break;
+                }
+            } else {
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        startRectShapeX = event.getX();
+                        startRectShapeY = event.getY();
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        drawRectShape(startRectShapeX,startRectShapeY,x,y);
+                        drawingView.invalidate();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        drawRectShape(startRectShapeX,startRectShapeY,x,y);
+                        finalDrawRectShapeStatus=true;
+                        drawingView.invalidate();
+                        break;
+                }
             }
         }
         return true;
     }
-
-
+    public void drawRectShape(float x1,float y1,float x2,float y2)
+    {
+        Rect rect=new Rect((int)x1, (int)y1, (int)x2, (int)y2);
+        rectShapePaths.add(rect);
+        redoPaths.clear();
+    }
     public void convertImg_v1() {
         try {
             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -400,5 +471,14 @@ public class DrawView extends RelativeLayout {
     private void setUnableRedo() {
         btnRedo.setEnabled(false);
         btnRedo.setImageResource(R.drawable.redo_disable);
+    }
+    public void erasingStatus(boolean status)
+    {
+
+        isErasing=status;
+    }
+    public void drawShapeStatus(boolean status)
+    {
+        drawShape=status;
     }
 }

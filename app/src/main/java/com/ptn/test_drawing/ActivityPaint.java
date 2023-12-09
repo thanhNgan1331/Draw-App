@@ -45,6 +45,7 @@ import yuku.ambilwarna.AmbilWarnaDialog;
 
 public class ActivityPaint extends AppCompatActivity {
 
+
     private DrawView paint;
 
     private ImageView btnUndo, btnRedo, btnColor, btnPen, btnMenu, btnEraser, btnFullScreenHide, btnFullScreenShow;
@@ -207,6 +208,7 @@ public class ActivityPaint extends AppCompatActivity {
                         paint.addSticker();
                         break;
                     case 4: // Shapes
+                        paint.drawShapeStatus(true);
                         break;
                     case 5: // Exit
                         btnLogout(v);
@@ -290,6 +292,10 @@ public class ActivityPaint extends AppCompatActivity {
         btnPen.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                paint.erasingStatus(false);
+                paint.drawShapeStatus(false);
+
+
                 listMenu.setVisibility(View.GONE);
                 if (layoutSizeAndOpacity.getVisibility() == View.VISIBLE) {
                     layoutSizeAndOpacity.setVisibility(View.GONE);
@@ -304,6 +310,7 @@ public class ActivityPaint extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 // paint.setEraser();
+                paint.erasingStatus(true);
             }
         });
 

@@ -14,7 +14,7 @@ public class Stroke {
     public Path path;
 
     public int alpha;
-
+    public boolean useErase=false;
     // constructor to initialise the attributes
     public Stroke(int color, int strokeWidth, Path path, int alpha) {
         this.color = color;
