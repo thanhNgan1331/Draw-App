@@ -48,14 +48,14 @@ public class ActivityPaint extends AppCompatActivity {
 
     private DrawView paint;
 
-    private ImageView btnUndo, btnRedo, btnColor, btnPen, btnMenu, btnEraser, btnFullScreenHide, btnFullScreenShow;
+    private ImageView btnUndo, btnRedo, btnColor, btnPen, btnMenu, btnEraser, btnFullScreenHide, btnFullScreenShow, btnCircle,btnRect,btnLine;
 
     LinearLayout layoutMenu;
 
     int DefaultColor = Color.BLACK;
 
     ListView listView, listMenu;
-    LinearLayout layoutSizeAndOpacity;
+    LinearLayout layoutSizeAndOpacity,shapeLayout;
 
     SeekBar seekBarSize, seekBarOpacity;
     TextView txtCountSize, txtCountOpacity;
@@ -112,6 +112,7 @@ public class ActivityPaint extends AppCompatActivity {
 
         layoutMenu = findViewById(R.id.layoutMenu);
         // getting the reference of the views from their ids
+        shapeLayout=findViewById(R.id.shapeLayout);
         paint = findViewById(R.id.draw_view);
         btnRedo = findViewById(R.id.btnRedo);
         btnUndo = findViewById(R.id.btnUndo);
@@ -119,6 +120,11 @@ public class ActivityPaint extends AppCompatActivity {
         btnMenu = findViewById(R.id.btnMenu);
         btnPen = findViewById(R.id.btnPen);
         btnEraser = findViewById(R.id.btnEraser);
+
+        btnCircle = findViewById(R.id.btnCircle);
+        btnRect=findViewById(R.id.btnRect);
+        btnLine=findViewById(R.id.btnLine);
+
         btnFullScreenHide = findViewById(R.id.btnFullScreenHide);
         btnFullScreenShow = findViewById(R.id.btnFullScreenShow);
         seekBarSize = findViewById(R.id.seekBarSize);
@@ -127,6 +133,7 @@ public class ActivityPaint extends AppCompatActivity {
         txtCountOpacity = findViewById(R.id.txtCountOpacity);
         layoutSizeAndOpacity = findViewById(R.id.layoutSizeAndOpacity);
         listView = findViewById(R.id.listView);
+
         listMenu = findViewById(R.id.listMenu);
         paint.setObjectInActivity(listMenu, listView, layoutSizeAndOpacity, btnUndo, btnRedo);
 
@@ -208,7 +215,8 @@ public class ActivityPaint extends AppCompatActivity {
                         paint.addSticker();
                         break;
                     case 4: // Shapes
-                        paint.drawShapeStatus(true);
+                        shapeLayout.setVisibility(View.VISIBLE);
+                        listMenu.setVisibility(View.GONE);
                         break;
                     case 5: // Exit
                         btnLogout(v);
@@ -216,9 +224,34 @@ public class ActivityPaint extends AppCompatActivity {
                 }
             }
         });
+        btnLine.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v)
+            {
+                shapeLayout.setVisibility(View.GONE);
+                paint.drawShapeStatus(false);//để tắt toàn bộ trạng thái vẽ circle,rect
+                paint.drawShapeStatus(true);
+                paint.drawLineStatus(true);
+            }
+        });
+        btnRect.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v)
+            {
+                shapeLayout.setVisibility(View.GONE);
+                paint.drawShapeStatus(false);//để tắt toàn bộ trạng thái vẽ circle,line
+                paint.drawShapeStatus(true);
+                paint.drawRectStatus(true);
+            }
+        });
+        btnCircle.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v)
+            {
+                shapeLayout.setVisibility(View.GONE);
+                paint.drawShapeStatus(false);//để tắt toàn bộ trạng thái vẽ rect,line
+                paint.drawShapeStatus(true);
+                paint.drawCircleStatus(true);
 
-
-
+            }
+        });
         btnFullScreenHide.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -311,6 +344,7 @@ public class ActivityPaint extends AppCompatActivity {
             public void onClick(View v) {
                 // paint.setEraser();
                 paint.erasingStatus(true);
+                paint.drawShapeStatus(false);
             }
         });
 

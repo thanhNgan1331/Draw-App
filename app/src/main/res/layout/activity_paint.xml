@@ -16,7 +16,7 @@
         android:layout_marginTop="12dp"
         android:background="#E0E0E0"
         android:orientation="vertical"
-        android:visibility="gone"
+        android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.468"
         app:layout_constraintStart_toStartOf="parent"
@@ -225,7 +225,7 @@
         android:background="#E0E0E0"
         android:divider="@drawable/border_listview"
         android:dividerHeight="1dp"
-        android:visibility="gone"
+        android:visibility="visible"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/layoutMenu" />
 
@@ -240,6 +240,39 @@
         app:layout_constraintTop_toBottomOf="parent"
         app:layout_constraintVertical_bias="0.889" >
 
+        <LinearLayout
+            android:id="@+id/shapeLayout"
+            android:layout_width="199dp"
+            android:layout_height="84dp"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentBottom="true"
+            android:layout_marginEnd="89dp"
+            android:layout_marginBottom="554dp"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <ImageView
+                android:id="@+id/btnCircle"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                app:srcCompat="@drawable/draw_circle" />
+
+            <ImageView
+                android:id="@+id/btnRect"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                app:srcCompat="@drawable/draw_square" />
+
+            <ImageView
+                android:id="@+id/btnLine"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                app:srcCompat="@drawable/draw_line" />
+
+        </LinearLayout>
     </com.ptn.test_drawing.DrawView>
 
     <ListView
