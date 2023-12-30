@@ -4,6 +4,7 @@ import android.view.MotionEvent;
 import android.widget.Toast;
 import com.xiaopo.flying.sticker.StickerIconEvent;
 import com.xiaopo.flying.sticker.StickerView;
+import com.xiaopo.flying.sticker.TextSticker;
 
 /**
  * @author wupanjie
@@ -20,7 +21,6 @@ public class HelloIconEvent implements StickerIconEvent{
   }
 
   @Override public void onActionUp(StickerView stickerView, MotionEvent event) {
-
-    Toast.makeText(stickerView.getContext(), "Hello World!", Toast.LENGTH_SHORT).show();
+    stickerView.showChange((TextSticker) stickerView.getCurrentSticker(), stickerView);
   }
 }
