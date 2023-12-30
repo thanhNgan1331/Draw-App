@@ -4,7 +4,7 @@ public class MyLine {
     public int color;
     public int strokeWidth;
     public int alpha;
-    float startX,startY,stopX,stopY;
+    public float startX,startY,stopX,stopY;
     public MyLine(float startX,float startY,float stopX,float stopY,int color,int strokeWidth,int alpha)
     {
         this.startX=startX;

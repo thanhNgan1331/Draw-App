@@ -1,15 +1,10 @@
 package com.ptn.test_drawing;
 
-import android.graphics.Rect;
-
 public class MyOval {
     public int color;
     public int strokeWidth;
     public int alpha;
-    int left;
-    int top;
-    int right;
-    int bottom;
+    public int left, top, right, bottom;
     public MyOval(int left,int top,int right,int bottom,int color, int strokeWidth,  int alpha)
     {
         this.left=left;

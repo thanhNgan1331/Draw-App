@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".TextView"
+    tools:context=".usingSticker.TextView"
     >
 
     <androidx.appcompat.widget.Toolbar
@@ -27,8 +27,6 @@
       app:showBorder="true"
       app:showIcons="true"
       >
-
-
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="match_parent"

@@ -103,14 +103,17 @@ public class StickerView extends FrameLayout {
 
   public StickerView(Context context) {
     this(context, null);
+    Log.d("StickerAndDrawView", "Sticker Constructor with 1 parameter called");
   }
 
   public StickerView(Context context, AttributeSet attrs) {
     this(context, attrs, 0);
+    Log.d("StickerAndDrawView", "Sticker Constructor with 2 parameters called");
   }
 
   public StickerView(Context context, AttributeSet attrs, int defStyleAttr) {
     super(context, attrs, defStyleAttr);
+    Log.d("StickerAndDrawView", "Sticker Constructor with 3 parameters called");
     touchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
     TypedArray a = null;
     try {
@@ -124,7 +127,6 @@ public class StickerView extends FrameLayout {
       borderPaint.setColor(a.getColor(R.styleable.StickerView_borderColor, Color.BLACK));
       borderPaint.setAlpha(a.getInteger(R.styleable.StickerView_borderAlpha, 128));
 
-      configDefaultIcons();
     } finally {
       if (a != null) {
         a.recycle();
@@ -133,6 +135,7 @@ public class StickerView extends FrameLayout {
   }
 
   public void configDefaultIcons() {
+    Log.d("StickerAndDrawView", "configDefaultIcons called");
     BitmapStickerIcon deleteIcon = new BitmapStickerIcon(
         ContextCompat.getDrawable(getContext(), R.drawable.sticker_ic_close_white_18dp),
         BitmapStickerIcon.LEFT_TOP);
@@ -176,7 +179,9 @@ public class StickerView extends FrameLayout {
     }
   }
 
-  @Override protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+  @Override
+  protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
+    Log.d("StickerAndDrawView", "onLayout called");
     super.onLayout(changed, left, top, right, bottom);
     if (changed) {
       stickerRect.left = left;
@@ -186,7 +191,8 @@ public class StickerView extends FrameLayout {
     }
   }
 
-  @Override protected void dispatchDraw(Canvas canvas) {
+  @Override
+  protected void dispatchDraw(Canvas canvas) {
     super.dispatchDraw(canvas);
     drawStickers(canvas);
   }
@@ -200,7 +206,6 @@ public class StickerView extends FrameLayout {
     }
 
     if (handlingSticker != null && !locked && (showBorder || showIcons)) {
-
       getStickerPoints(handlingSticker, bitmapPoints);
 
       float x1 = bitmapPoints[0];
@@ -258,7 +263,8 @@ public class StickerView extends FrameLayout {
     icon.getMatrix().postTranslate(x - icon.getWidth() / 2, y - icon.getHeight() / 2);
   }
 
-  @Override public boolean onInterceptTouchEvent(MotionEvent ev) {
+  @Override
+  public boolean onInterceptTouchEvent(MotionEvent ev) {
     if (locked) return super.onInterceptTouchEvent(ev);
 
     switch (ev.getAction()) {
@@ -272,7 +278,8 @@ public class StickerView extends FrameLayout {
     return super.onInterceptTouchEvent(ev);
   }
 
-  @Override public boolean onTouchEvent(MotionEvent event) {
+  @Override
+  public boolean onTouchEvent(MotionEvent event) {
     if (locked) {
       return super.onTouchEvent(event);
     }
@@ -555,7 +562,9 @@ public class StickerView extends FrameLayout {
     return (float) Math.sqrt(x * x + y * y);
   }
 
-  @Override protected void onSizeChanged(int w, int h, int oldW, int oldH) {
+  @Override
+  protected void onSizeChanged(int w, int h, int oldW, int oldH) {
+    Log.d("StickerAndDrawView", "onSizeChanged called");
     super.onSizeChanged(w, h, oldW, oldH);
     for (int i = 0; i < stickers.size(); i++) {
       Sticker sticker = stickers.get(i);

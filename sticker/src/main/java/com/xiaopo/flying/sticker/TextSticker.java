@@ -188,7 +188,8 @@ public class TextSticker extends Sticker {
     return this;
   }
 
-  @NonNull public TextSticker setText(@Nullable String text) {
+  @NonNull
+  public TextSticker setText(@Nullable String text) {
     this.text = text;
     return this;
   }

@@ -87,6 +87,17 @@
             android:textStyle="bold"
             android:textColor="@drawable/text_color"/>
 
+        <TextView
+            android:id="@+id/txtScanQR"
+            style="@style/parent"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/loginViewsMargin"
+            android:text="Scan QR to connect"
+            android:textAlignment="textEnd"
+            android:textColor="@drawable/text_color"
+            android:textStyle="bold" />
+
 
     </LinearLayout>
 </RelativeLayout>

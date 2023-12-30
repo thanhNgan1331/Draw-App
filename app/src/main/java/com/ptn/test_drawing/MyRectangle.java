@@ -1,6 +1,5 @@
 package com.ptn.test_drawing;
 
-import android.graphics.Path;
 import android.graphics.Rect;
 
 public class MyRectangle {

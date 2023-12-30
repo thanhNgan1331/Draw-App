@@ -4,22 +4,27 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
 import android.graphics.Color;
-import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
+import android.util.Base64;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
-import android.widget.GridView;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
@@ -27,15 +32,26 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
-import com.ptn.test_drawing.itemL.CustomGridAdapter;
 import com.ptn.test_drawing.itemL.CustomListAdapter;
 import com.ptn.test_drawing.itemL.Item_draw;
+import com.ptn.test_drawing.usingSticker.HelloIconEvent;
+import com.xiaopo.flying.sticker.BitmapStickerIcon;
+import com.xiaopo.flying.sticker.DeleteIconEvent;
+import com.xiaopo.flying.sticker.DrawableSticker;
+import com.xiaopo.flying.sticker.FlipHorizontallyEvent;
+import com.xiaopo.flying.sticker.Sticker;
+import com.xiaopo.flying.sticker.StickerView;
+import com.xiaopo.flying.sticker.TextSticker;
+import com.xiaopo.flying.sticker.ZoomIconEvent;
 
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -45,28 +61,37 @@ import yuku.ambilwarna.AmbilWarnaDialog;
 
 public class ActivityPaint extends AppCompatActivity {
 
-
     private DrawView paint;
-
-    private ImageView btnUndo, btnRedo, btnColor, btnPen, btnMenu, btnEraser, btnFullScreenHide, btnFullScreenShow, btnCircle,btnRect,btnLine;
-
+    private ImageView
+            btnUndo, btnRedo, btnColor, btnPen, btnMenu, btnEraser,
+            btnFullScreenHide, btnFullScreenShow,
+            btnCircle, btnRect, btnLine,
+            btnCloseEditText, btnChooseSizeText, btnFlipText;
     LinearLayout layoutMenu;
 
     int DefaultColor = Color.BLACK;
 
-    ListView listView, listMenu;
-    LinearLayout layoutSizeAndOpacity,shapeLayout;
+    ListView listItemForNew, listMenu;
+    LinearLayout layoutSizeAndOpacity, shapeLayout, layoutSizeEraser, textLayout;
 
-    SeekBar seekBarSize, seekBarOpacity;
-    TextView txtCountSize, txtCountOpacity;
+    SeekBar seekBarSize, seekBarOpacity, seekBarEraser;
+    TextView txtCountSize, txtCountOpacity, txtCountEraser;
 
     String ip;
     int port;
 
     private ProgressDialog progressDialog;
+    private Connection connection;
+
+    int flagNew = 0;
+
+    private static final String TAG = "ABCDEFGHIJKL";
+
+    // Khai báo các biến dùng cho vẽ text
+    TextSticker textSticker;
 
 
-
+    // Khởi tạo dữ liệu cho menu
     private List<Item_draw> getListDataMenu() {
         List<Item_draw> list = new ArrayList<Item_draw>();
         Item_draw newImage = new Item_draw("new_page");
@@ -83,10 +108,8 @@ public class ActivityPaint extends AppCompatActivity {
         list.add(shapes);
         list.add(exit);
 
-
         return list;
     }
-
 
 
     private List<Item_draw> getListDataList() {
@@ -109,10 +132,8 @@ public class ActivityPaint extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.activity_paint);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 
-        layoutMenu = findViewById(R.id.layoutMenu);
-        // getting the reference of the views from their ids
-        shapeLayout=findViewById(R.id.shapeLayout);
         paint = findViewById(R.id.draw_view);
         btnRedo = findViewById(R.id.btnRedo);
         btnUndo = findViewById(R.id.btnUndo);
@@ -121,31 +142,63 @@ public class ActivityPaint extends AppCompatActivity {
         btnPen = findViewById(R.id.btnPen);
         btnEraser = findViewById(R.id.btnEraser);
 
+        // Các button vẽ hình
         btnCircle = findViewById(R.id.btnCircle);
-        btnRect=findViewById(R.id.btnRect);
-        btnLine=findViewById(R.id.btnLine);
+        btnRect = findViewById(R.id.btnRect);
+        btnLine = findViewById(R.id.btnLine);
 
+        // Các button full screen
         btnFullScreenHide = findViewById(R.id.btnFullScreenHide);
         btnFullScreenShow = findViewById(R.id.btnFullScreenShow);
+
+        // Các button text
+        btnCloseEditText = findViewById(R.id.btnCloseEditText);
+        btnChooseSizeText = findViewById(R.id.btnChooseSizeText);
+        btnFlipText = findViewById(R.id.btnFlipText);
+
+        // Các seekbar
         seekBarSize = findViewById(R.id.seekBarSize);
         seekBarOpacity = findViewById(R.id.seekBarOpacity);
+        seekBarEraser = findViewById(R.id.seekBarSizeEraser);
+
+        // Các textview
         txtCountSize = findViewById(R.id.txtCountSize);
         txtCountOpacity = findViewById(R.id.txtCountOpacity);
+        txtCountEraser = findViewById(R.id.txtCountSizeEraser);
+
+        // Các layout
+        layoutMenu = findViewById(R.id.layoutMenu);
         layoutSizeAndOpacity = findViewById(R.id.layoutSizeAndOpacity);
-        listView = findViewById(R.id.listView);
+        layoutSizeEraser = findViewById(R.id.layoutSizeEraser);
+        shapeLayout = findViewById(R.id.shapeLayout);
+        textLayout = findViewById(R.id.textLayout);
 
+        // Các listview
+        listItemForNew = findViewById(R.id.listItemForNew);
         listMenu = findViewById(R.id.listMenu);
-        paint.setObjectInActivity(listMenu, listView, layoutSizeAndOpacity, btnUndo, btnRedo);
 
+        // Dùng để truyền dữ liệu từ các view trong Activity sang class DrawView
+        paint.setObjectInActivity(listMenu, listItemForNew, layoutMenu, layoutSizeAndOpacity, layoutSizeEraser, shapeLayout, btnUndo, btnRedo);
 
         layoutMenu.bringToFront();
-
-        btnUndo.setEnabled(false);
-        btnRedo.setEnabled(false);
 
         Intent intent = getIntent();
         ip = intent.getStringExtra("ip_key");
         port = intent.getIntExtra("port_key", 6862);
+        Log.d("IPadddd", "" + ip);
+        connection = new Connection(ip, port);
+
+        ViewTreeObserver vto = paint.getViewTreeObserver();
+        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                paint.getViewTreeObserver().removeOnGlobalLayoutListener(this);
+                int width = paint.getMeasuredWidth();
+                int height = paint.getMeasuredHeight();
+                paint.init(height, width, ip, port);
+            }
+        });
+
 
         btnUndo.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -172,19 +225,22 @@ public class ActivityPaint extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 layoutSizeAndOpacity.setVisibility(View.GONE);
+                layoutSizeEraser.setVisibility(View.GONE);
+                shapeLayout.setVisibility(View.GONE);
                 showHide(v);
             }
         });
 
 
         List<Item_draw> itemList = getListDataList();
-        listView.setAdapter(new CustomListAdapter(this, itemList));
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+        listItemForNew.setAdapter(new CustomListAdapter(this, itemList));
+        listItemForNew.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> a, View v, int position, long id) {
-                Object o = listView.getItemAtPosition(position);
+                Object o = listItemForNew.getItemAtPosition(position);
                 switch (position) {
                     case 0: // Save
+                        flagNew = 1;
                         btnSaveImage(v);
                         break;
                     case 1: // Discard
@@ -202,31 +258,97 @@ public class ActivityPaint extends AppCompatActivity {
             public void onItemClick(AdapterView<?> a, View v, int position, long id) {
                 Object o = listMenu.getItemAtPosition(position);
                 switch (position) {
-                    case 0: // New page
-                        // btnSaveImage(v);
+                    case 0: // New menu
+                        listMenu.setVisibility(View.GONE);
+                        listItemForNew.setVisibility(View.VISIBLE);
                         break;
                     case 1: // Save
+                        flagNew = 0;
                         btnSaveImage(v);
                         break;
                     case 2: // Open Image
                         btnOpenImage(v);
                         break;
                     case 3: // Text
-                        paint.addSticker();
+
+                        textLayout.setVisibility(View.VISIBLE);
+                        textLayout.bringToFront();
+                        listMenu.setVisibility(View.GONE);
+
+                        textSticker = paint.addText();
+                        paint.addSticker(textSticker);
+
+                        paint.setTouchMode(DrawView.TouchMode.STICKERVIEW);
+                        paint.configDefaultIcons(); // Gọi sau khi khởi tạo paint
+                        paint.setLocked(false);
+                        paint.setConstrained(true);
+                        paint.setOnStickerOperationListener(new StickerView.OnStickerOperationListener() {
+                            @Override
+                            public void onStickerAdded(@NonNull Sticker sticker) {
+                                Log.d(TAG, "onStickerAdded");
+                            }
+
+                            @Override
+                            public void onStickerClicked(@NonNull Sticker sticker) {
+                                if (sticker instanceof TextSticker) {
+                                    ((TextSticker) sticker).setText("Hello, world!\nHello, world!");
+                                    paint.replace(sticker);
+                                    paint.invalidate();
+                                }
+                                Log.d(TAG, "onStickerClicked");
+                            }
+
+                            @Override
+                            public void onStickerDeleted(@NonNull Sticker sticker) {
+                                Log.d(TAG, "onStickerDeleted");
+                            }
+
+                            @Override
+                            public void onStickerDragFinished(@NonNull Sticker sticker) {
+                                Log.d(TAG, "onStickerDragFinished");
+                            }
+
+                            @Override
+                            public void onStickerTouchedDown(@NonNull Sticker sticker) {
+                                Log.d(TAG, "onStickerTouchedDown");
+                            }
+
+                            @Override
+                            public void onStickerZoomFinished(@NonNull Sticker sticker) {
+                                Log.d(TAG, "onStickerZoomFinished");
+                            }
+
+                            @Override
+                            public void onStickerFlipped(@NonNull Sticker sticker) {
+                                Log.d(TAG, "onStickerFlipped");
+                            }
+
+                            @Override
+                            public void onStickerDoubleTapped(@NonNull Sticker sticker) {
+                                Log.d(TAG, "onDoubleTapped: double tap will be with two click");
+                            }
+                        });
+
+
                         break;
                     case 4: // Shapes
                         shapeLayout.setVisibility(View.VISIBLE);
+                        shapeLayout.bringToFront();
                         listMenu.setVisibility(View.GONE);
                         break;
                     case 5: // Exit
                         btnLogout(v);
                         break;
+                    case 6: // Switch user
+                        paint.setTouchMode(DrawView.TouchMode.DRAWVIEW);
+                        break;
                 }
             }
         });
+
+        // Các button vẽ hình
         btnLine.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v)
-            {
+            public void onClick(View v) {
                 shapeLayout.setVisibility(View.GONE);
                 paint.drawShapeStatus(false);//để tắt toàn bộ trạng thái vẽ circle,rect
                 paint.drawShapeStatus(true);
@@ -234,8 +356,7 @@ public class ActivityPaint extends AppCompatActivity {
             }
         });
         btnRect.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v)
-            {
+            public void onClick(View v) {
                 shapeLayout.setVisibility(View.GONE);
                 paint.drawShapeStatus(false);//để tắt toàn bộ trạng thái vẽ circle,line
                 paint.drawShapeStatus(true);
@@ -243,8 +364,7 @@ public class ActivityPaint extends AppCompatActivity {
             }
         });
         btnCircle.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v)
-            {
+            public void onClick(View v) {
                 shapeLayout.setVisibility(View.GONE);
                 paint.drawShapeStatus(false);//để tắt toàn bộ trạng thái vẽ rect,line
                 paint.drawShapeStatus(true);
@@ -252,6 +372,33 @@ public class ActivityPaint extends AppCompatActivity {
 
             }
         });
+
+        // Các button vẽ text
+        btnCloseEditText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                paint.setTouchMode(DrawView.TouchMode.DRAWVIEW);
+                textLayout.setVisibility(View.GONE);
+            }
+        });
+
+        btnChooseSizeText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                layoutSizeAndOpacity.setVisibility(View.VISIBLE);
+                layoutSizeAndOpacity.bringToFront();
+            }
+        });
+
+        btnFlipText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //paint.flipText();
+
+            }
+        });
+
+        // Các button full screen
         btnFullScreenHide.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -260,7 +407,6 @@ public class ActivityPaint extends AppCompatActivity {
                 btnFullScreenShow.bringToFront();
             }
         });
-
         btnFullScreenShow.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -270,19 +416,10 @@ public class ActivityPaint extends AppCompatActivity {
         });
 
 
-        ViewTreeObserver vto = paint.getViewTreeObserver();
-        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-            @Override
-            public void onGlobalLayout() {
-                paint.getViewTreeObserver().removeOnGlobalLayoutListener(this);
-                int width = paint.getMeasuredWidth();
-                int height = paint.getMeasuredHeight();
-                paint.init(height, width, ip, port);
-            }
-        });
-
         txtCountSize.setText(seekBarSize.getProgress() + "");
         txtCountOpacity.setText(seekBarOpacity.getProgress() + "%");
+        txtCountEraser.setText(seekBarEraser.getProgress() + "");
+
 
         seekBarSize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
@@ -320,6 +457,23 @@ public class ActivityPaint extends AppCompatActivity {
 
             }
         });
+        seekBarEraser.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                txtCountEraser.setText(progress + "");
+                paint.setStrokeWidth(progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {
+
+            }
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {
+
+            }
+        });
 
 
         btnPen.setOnClickListener(new View.OnClickListener() {
@@ -327,9 +481,9 @@ public class ActivityPaint extends AppCompatActivity {
             public void onClick(View v) {
                 paint.erasingStatus(false);
                 paint.drawShapeStatus(false);
-
-
                 listMenu.setVisibility(View.GONE);
+                layoutSizeEraser.setVisibility(View.GONE);
+                shapeLayout.setVisibility(View.GONE);
                 if (layoutSizeAndOpacity.getVisibility() == View.VISIBLE) {
                     layoutSizeAndOpacity.setVisibility(View.GONE);
                 } else {
@@ -342,12 +496,49 @@ public class ActivityPaint extends AppCompatActivity {
         btnEraser.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                // paint.setEraser();
                 paint.erasingStatus(true);
                 paint.drawShapeStatus(false);
+                listMenu.setVisibility(View.GONE);
+                layoutSizeAndOpacity.setVisibility(View.GONE);
+                shapeLayout.setVisibility(View.GONE);
+                if (layoutSizeEraser.getVisibility() == View.VISIBLE) {
+                    layoutSizeEraser.setVisibility(View.GONE);
+                } else {
+                    layoutSizeEraser.setVisibility(View.VISIBLE);
+                    layoutSizeEraser.bringToFront();
+                }
             }
         });
+    }
 
+    // Phương thức để hiển thị dialog chỉnh sửa văn bản
+    private void showEditDialog(final TextSticker textSticker) {
+        final EditText editText = new EditText(this);
+        editText.setText(textSticker.getText());
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Edit Text")
+                .setView(editText)
+                .setPositiveButton("Done", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        String newText = editText.getText().toString();
+                        textSticker.setText(newText);
+                        paint.replace(textSticker);
+                        paint.invalidate();
+                    }
+                })
+                .setNegativeButton("Cancel", null)
+                .create()
+                .show();
+    }
+
+    public void textAdd(View view) {
+        final TextSticker sticker = new TextSticker(this);
+        sticker.setText("Hello, world!");
+        sticker.setTextColor(Color.BLUE);
+        sticker.resizeText();
+        paint.addSticker(sticker);
     }
 
     public void btnOpenImage(View v) {
@@ -361,20 +552,19 @@ public class ActivityPaint extends AppCompatActivity {
         if (resultCode == RESULT_OK && data != null) {
             Uri selectedImage = data.getData();
             try {
-                Bitmap bitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImage);
-                paint.setImageBackground(bitmap);
+                Bitmap selectedBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), selectedImage);
+                selectedBitmap = Bitmap.createScaledBitmap(selectedBitmap, paint.getMeasuredWidth(), paint.getMeasuredHeight(), false);
+                paint.setImageBackground(selectedBitmap);
             } catch (IOException e) {
                 e.printStackTrace();
+                Log.d("SetImage", "Not Success: " + e.getMessage());
+
             }
         }
     }
 
-    public void btnImportText(View view) {
-        paint.addSticker();
-    }
-
     public void btnLogout(View view) {
-        //sendData_v1("logout");
+        connection.sendData("logout");
         Intent intent = new Intent(this, ConnectToTheServerActivity.class);
         startActivity(intent);
         finish();
@@ -401,19 +591,20 @@ public class ActivityPaint extends AppCompatActivity {
         Uri uri = contentResolver.insert(images, contentValues);
         try {
             OutputStream outputStream = contentResolver.openOutputStream(Objects.requireNonNull(uri));
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, outputStream);
+            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outputStream);
             Objects.requireNonNull(outputStream);
         } catch (Exception e) {
             Toast.makeText(this, "Lưu ảnh thất bại", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
-        }
-        finally {
+        } finally {
             // Đóng ProgressDialog sau một khoảng thời gian
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
+                    paint.hideAllLayout();
                     progressDialog.dismiss();
-                    paint.newImage();
+                    if (flagNew == 1)
+                        paint.newImage();
                 }
             }, 1000);
         }
@@ -432,7 +623,8 @@ public class ActivityPaint extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // Hành động khi nút OK được nhấn
-                paint.newImage();            }
+                paint.newImage();
+            }
         });
         // Thiết lập nút No và hành động khi nút đó được nhấn
         builder.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
@@ -442,7 +634,6 @@ public class ActivityPaint extends AppCompatActivity {
                 dialog.dismiss();
             }
         });
-
 
         // Tạo và hiển thị AlertDialog
         AlertDialog alertDialog = builder.create();
@@ -454,7 +645,7 @@ public class ActivityPaint extends AppCompatActivity {
     public void showHide(View view) {
         if (listMenu.getVisibility() == View.VISIBLE) {
             listMenu.setVisibility(View.GONE);
-        } else{
+        } else {
             listMenu.setVisibility(View.VISIBLE);
             listMenu.bringToFront();
         }

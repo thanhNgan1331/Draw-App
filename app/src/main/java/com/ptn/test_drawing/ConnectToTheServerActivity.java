@@ -1,14 +1,19 @@
 package com.ptn.test_drawing;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.Editable;
 import android.text.TextUtils;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
@@ -17,6 +22,9 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.journeyapps.barcodescanner.ScanContract;
+import com.journeyapps.barcodescanner.ScanOptions;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -29,7 +37,7 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
     TextView txtHeader;
     Button btnConnect;
     ProgressBar progressBar;
-    TextView txtContinueWithoutConnection, txtProcessing;
+    TextView txtContinueWithoutConnection, txtProcessing, txtScanQR;
     String ip;
     int port;
 
@@ -41,6 +49,8 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
         getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
         setContentView(R.layout.connect_to_the_server);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
 
         txtIP = findViewById(R.id.txtIP);
         txtPort = findViewById(R.id.txtPort);
@@ -49,8 +59,9 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
         txtHeader = findViewById(R.id.txtHeader);
         txtContinueWithoutConnection = findViewById(R.id.txtContinueWithoutConnection);
         txtProcessing = findViewById(R.id.txtProcessing);
+        txtScanQR = findViewById(R.id.txtScanQR);
 
-        txtIP.addTextChangedListener(new TextWatcher(){
+        txtIP.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
@@ -100,7 +111,45 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
                 startActivity(intent);
             }
         });
+
+        txtScanQR.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                scanCode();
+            }
+        });
     }
+
+    public void scanCode() {
+        ScanOptions options = new ScanOptions();
+        options.setBeepEnabled(true);
+        options.setPrompt("Scan QR code");
+        options.setOrientationLocked(true);
+        options.setCaptureActivity(ScanQR.class);
+        barLaucher.launch(options);
+    }
+
+    ActivityResultLauncher<ScanOptions> barLaucher = registerForActivityResult(new ScanContract(), result -> {
+        if (result.getContents() != null) {
+
+            String original = result.getContents();
+            String[] parts = original.split("-"); // Sử dụng dấu gạch ngang làm ký tự phân tách
+
+            String ip = parts[0]; // IP
+            String portStr = parts[1]; // Port
+            txtIP.setText(ip);
+            txtPort.setText(portStr);
+
+            int port = Integer.parseInt(portStr);
+            Toast.makeText(getApplicationContext(), "Đang kết nối tới server...", Toast.LENGTH_SHORT).show();
+            // Gửi yêu cầu kết nối tới server
+            progressBar.setVisibility(View.VISIBLE); // Hiển thị ProgressBar
+            txtProcessing.setVisibility(View.VISIBLE);
+            sendData_v3(ip, port);
+        }
+    });
+
 
     private boolean isValid(String s) {
         String regex = "[0-9.]*";
@@ -123,8 +172,7 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
     };
 
 
-    public void sendData_v3(String ip, int port)
-    {
+    public void sendData_v3(String ip, int port) {
         connectionTimer.start();
         String mess = "1";
         try {
@@ -135,8 +183,7 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
         }
     }
 
-    private class ConnectToServerTask extends AsyncTask<String, Void, Void>
-    {
+    private class ConnectToServerTask extends AsyncTask<String, Void, Void> {
         private String ip;
         private int port;
 
@@ -147,12 +194,11 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
 
         @Override
         protected Void doInBackground(String... voids) {
-            try (
-                    Socket s = new Socket(ip, port);
-                    PrintWriter writer = new PrintWriter(s.getOutputStream());
-                    InputStreamReader streamReader = new InputStreamReader(s.getInputStream());
-                    BufferedReader reader = new BufferedReader(streamReader);
-            ) {
+            try {
+                Socket s = new Socket(ip, port);
+                PrintWriter writer = new PrintWriter(s.getOutputStream());
+                InputStreamReader streamReader = new InputStreamReader(s.getInputStream());
+                BufferedReader reader = new BufferedReader(streamReader);
 
                 // Lấy dữ liệu từ EditText
                 String clientMessage = voids[0];//là string "1": xác định client gửi yêu cầu kết nối tới server
