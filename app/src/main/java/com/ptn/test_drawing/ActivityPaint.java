@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -16,13 +15,12 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.MediaStore;
-import android.util.Base64;
+import android.text.Layout;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewTreeObserver;
 import android.view.Window;
 import android.view.WindowManager;
-import android.view.inputmethod.InputMethodManager;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -38,10 +36,9 @@ import androidx.core.content.ContextCompat;
 
 import com.ptn.test_drawing.itemL.CustomListAdapter;
 import com.ptn.test_drawing.itemL.Item_draw;
-import com.ptn.test_drawing.usingSticker.HelloIconEvent;
+import com.ptn.test_drawing.usingSticker.EditIconEvent;
 import com.xiaopo.flying.sticker.BitmapStickerIcon;
 import com.xiaopo.flying.sticker.DeleteIconEvent;
-import com.xiaopo.flying.sticker.DrawableSticker;
 import com.xiaopo.flying.sticker.FlipHorizontallyEvent;
 import com.xiaopo.flying.sticker.Sticker;
 import com.xiaopo.flying.sticker.StickerView;
@@ -66,13 +63,12 @@ public class ActivityPaint extends AppCompatActivity {
             btnUndo, btnRedo, btnColor, btnPen, btnMenu, btnEraser,
             btnFullScreenHide, btnFullScreenShow,
             btnCircle, btnRect, btnLine,
-            btnCloseEditText, btnChooseSizeText, btnFlipText;
-    LinearLayout layoutMenu;
+            btnCloseEditText, btnAddText, btnAddSticker;
 
     int DefaultColor = Color.BLACK;
 
     ListView listItemForNew, listMenu;
-    LinearLayout layoutSizeAndOpacity, shapeLayout, layoutSizeEraser, textLayout;
+    LinearLayout layoutMenu, layoutSizeAndOpacity, shapeLayout, layoutSizeEraser, textLayout;
 
     SeekBar seekBarSize, seekBarOpacity, seekBarEraser;
     TextView txtCountSize, txtCountOpacity, txtCountEraser;
@@ -88,7 +84,7 @@ public class ActivityPaint extends AppCompatActivity {
     private static final String TAG = "ABCDEFGHIJKL";
 
     // Khai báo các biến dùng cho vẽ text
-    TextSticker textSticker;
+    TextSticker sticker;
 
 
     // Khởi tạo dữ liệu cho menu
@@ -153,8 +149,8 @@ public class ActivityPaint extends AppCompatActivity {
 
         // Các button text
         btnCloseEditText = findViewById(R.id.btnCloseEditText);
-        btnChooseSizeText = findViewById(R.id.btnChooseSizeText);
-        btnFlipText = findViewById(R.id.btnFlipText);
+        btnAddText = findViewById(R.id.btnAddText);
+        btnAddSticker = findViewById(R.id.btnAddSticker);
 
         // Các seekbar
         seekBarSize = findViewById(R.id.seekBarSize);
@@ -178,7 +174,9 @@ public class ActivityPaint extends AppCompatActivity {
         listMenu = findViewById(R.id.listMenu);
 
         // Dùng để truyền dữ liệu từ các view trong Activity sang class DrawView
-        paint.setObjectInActivity(listMenu, listItemForNew, layoutMenu, layoutSizeAndOpacity, layoutSizeEraser, shapeLayout, btnUndo, btnRedo);
+        paint.setObjectInActivity(listMenu, listItemForNew, layoutMenu, layoutSizeAndOpacity, layoutSizeEraser, shapeLayout, textLayout, btnUndo, btnRedo);
+
+
 
         layoutMenu.bringToFront();
 
@@ -188,6 +186,7 @@ public class ActivityPaint extends AppCompatActivity {
         Log.d("IPadddd", "" + ip);
         connection = new Connection(ip, port);
 
+        // Lấy kích thước của view để vẽ
         ViewTreeObserver vto = paint.getViewTreeObserver();
         vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
             @Override
@@ -216,7 +215,6 @@ public class ActivityPaint extends AppCompatActivity {
         btnColor.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 OpenColorPickerDialog(false);
             }
         });
@@ -270,42 +268,57 @@ public class ActivityPaint extends AppCompatActivity {
                         btnOpenImage(v);
                         break;
                     case 3: // Text
-
                         textLayout.setVisibility(View.VISIBLE);
                         textLayout.bringToFront();
                         listMenu.setVisibility(View.GONE);
 
-                        textSticker = paint.addText();
-                        paint.addSticker(textSticker);
+                        BitmapStickerIcon deleteIcon = new BitmapStickerIcon(ContextCompat.getDrawable(ActivityPaint.this,
+                                com.xiaopo.flying.sticker.R.drawable.sticker_ic_close_white_18dp),
+                                BitmapStickerIcon.LEFT_TOP);
+                        deleteIcon.setIconEvent(new DeleteIconEvent());
+
+                        BitmapStickerIcon zoomIcon = new BitmapStickerIcon(ContextCompat.getDrawable(ActivityPaint.this,
+                                com.xiaopo.flying.sticker.R.drawable.sticker_ic_scale_white_18dp),
+                                BitmapStickerIcon.RIGHT_BOTOM);
+                        zoomIcon.setIconEvent(new ZoomIconEvent());
+
+                        BitmapStickerIcon flipIcon = new BitmapStickerIcon(ContextCompat.getDrawable(ActivityPaint.this,
+                                com.xiaopo.flying.sticker.R.drawable.sticker_ic_flip_white_18dp),
+                                BitmapStickerIcon.RIGHT_TOP);
+                        flipIcon.setIconEvent(new FlipHorizontallyEvent());
+
+                        BitmapStickerIcon editIcon =
+                                new BitmapStickerIcon(ContextCompat.getDrawable(ActivityPaint.this, R.drawable.ic_favorite_white_24dp),
+                                        BitmapStickerIcon.LEFT_BOTTOM);
+                        editIcon.setIconEvent(new EditIconEvent(connection));
+
+                        paint.setIcons(Arrays.asList(deleteIcon, zoomIcon, flipIcon, editIcon));
 
                         paint.setTouchMode(DrawView.TouchMode.STICKERVIEW);
-                        paint.configDefaultIcons(); // Gọi sau khi khởi tạo paint
                         paint.setLocked(false);
                         paint.setConstrained(true);
                         paint.setOnStickerOperationListener(new StickerView.OnStickerOperationListener() {
                             @Override
                             public void onStickerAdded(@NonNull Sticker sticker) {
                                 Log.d(TAG, "onStickerAdded");
+                                connection.sendData(connection.convertImg(connection.getBitmapFromViewUsingCanvas(paint)));
                             }
 
                             @Override
                             public void onStickerClicked(@NonNull Sticker sticker) {
-                                if (sticker instanceof TextSticker) {
-                                    ((TextSticker) sticker).setText("Hello, world!\nHello, world!");
-                                    paint.replace(sticker);
-                                    paint.invalidate();
-                                }
                                 Log.d(TAG, "onStickerClicked");
                             }
 
                             @Override
                             public void onStickerDeleted(@NonNull Sticker sticker) {
                                 Log.d(TAG, "onStickerDeleted");
+                                connection.sendData(connection.convertImg(connection.getBitmapFromViewUsingCanvas(paint)));
                             }
 
                             @Override
                             public void onStickerDragFinished(@NonNull Sticker sticker) {
                                 Log.d(TAG, "onStickerDragFinished");
+                                connection.sendData(connection.convertImg(connection.getBitmapFromViewUsingCanvas(paint)));
                             }
 
                             @Override
@@ -316,20 +329,26 @@ public class ActivityPaint extends AppCompatActivity {
                             @Override
                             public void onStickerZoomFinished(@NonNull Sticker sticker) {
                                 Log.d(TAG, "onStickerZoomFinished");
+                                connection.sendData(connection.convertImg(connection.getBitmapFromViewUsingCanvas(paint)));
                             }
 
                             @Override
                             public void onStickerFlipped(@NonNull Sticker sticker) {
                                 Log.d(TAG, "onStickerFlipped");
+                                connection.sendData(connection.convertImg(connection.getBitmapFromViewUsingCanvas(paint)));
                             }
 
                             @Override
                             public void onStickerDoubleTapped(@NonNull Sticker sticker) {
                                 Log.d(TAG, "onDoubleTapped: double tap will be with two click");
                             }
+
+                            @Override
+                            public void onReplace(@NonNull Sticker sticker) {
+                                Log.d(TAG, "onReplace");
+                                connection.sendData(connection.convertImg(connection.getBitmapFromViewUsingCanvas(paint)));
+                            }
                         });
-
-
                         break;
                     case 4: // Shapes
                         shapeLayout.setVisibility(View.VISIBLE);
@@ -382,19 +401,24 @@ public class ActivityPaint extends AppCompatActivity {
             }
         });
 
-        btnChooseSizeText.setOnClickListener(new View.OnClickListener() {
+        btnAddText.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                layoutSizeAndOpacity.setVisibility(View.VISIBLE);
-                layoutSizeAndOpacity.bringToFront();
+                showAdd();
             }
         });
 
-        btnFlipText.setOnClickListener(new View.OnClickListener() {
+        btnAddSticker.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //paint.flipText();
-
+                Drawable bubble = ContextCompat.getDrawable(ActivityPaint.this, R.drawable.bubble);
+                paint.addSticker(
+                        new TextSticker(getApplicationContext())
+                                .setDrawable(bubble)
+                                .setText("Sticker\n")
+                                .setMaxTextSize(14)
+                                .resizeText()
+                        , Sticker.Position.TOP);
             }
         });
 
@@ -484,6 +508,8 @@ public class ActivityPaint extends AppCompatActivity {
                 listMenu.setVisibility(View.GONE);
                 layoutSizeEraser.setVisibility(View.GONE);
                 shapeLayout.setVisibility(View.GONE);
+                textLayout.setVisibility(View.GONE);
+                paint.setTouchMode(DrawView.TouchMode.DRAWVIEW);
                 if (layoutSizeAndOpacity.getVisibility() == View.VISIBLE) {
                     layoutSizeAndOpacity.setVisibility(View.GONE);
                 } else {
@@ -501,6 +527,8 @@ public class ActivityPaint extends AppCompatActivity {
                 listMenu.setVisibility(View.GONE);
                 layoutSizeAndOpacity.setVisibility(View.GONE);
                 shapeLayout.setVisibility(View.GONE);
+                textLayout.setVisibility(View.GONE);
+                paint.setTouchMode(DrawView.TouchMode.DRAWVIEW);
                 if (layoutSizeEraser.getVisibility() == View.VISIBLE) {
                     layoutSizeEraser.setVisibility(View.GONE);
                 } else {
@@ -511,34 +539,27 @@ public class ActivityPaint extends AppCompatActivity {
         });
     }
 
-    // Phương thức để hiển thị dialog chỉnh sửa văn bản
-    private void showEditDialog(final TextSticker textSticker) {
+    // Phương thức để hiển thị dialog để thêm text
+    private void showAdd() {
         final EditText editText = new EditText(this);
-        editText.setText(textSticker.getText());
-
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
-        builder.setTitle("Edit Text")
+        builder.setTitle("Add new Text")
                 .setView(editText)
                 .setPositiveButton("Done", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
                         String newText = editText.getText().toString();
-                        textSticker.setText(newText);
-                        paint.replace(textSticker);
-                        paint.invalidate();
+                        sticker = new TextSticker(getApplicationContext());
+                        sticker.setText(newText);
+                        sticker.setTextColor(Color.BLUE);
+                        sticker.setTextAlign(Layout.Alignment.ALIGN_CENTER);
+                        sticker.resizeText();
+                        paint.addSticker(sticker);
                     }
                 })
                 .setNegativeButton("Cancel", null)
                 .create()
                 .show();
-    }
-
-    public void textAdd(View view) {
-        final TextSticker sticker = new TextSticker(this);
-        sticker.setText("Hello, world!");
-        sticker.setTextColor(Color.BLUE);
-        sticker.resizeText();
-        paint.addSticker(sticker);
     }
 
     public void btnOpenImage(View v) {
@@ -670,3 +691,5 @@ public class ActivityPaint extends AppCompatActivity {
 
     }
 }
+
+

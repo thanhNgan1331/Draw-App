@@ -367,7 +367,7 @@
             app:srcCompat="@drawable/close_edit_text" />
 
         <ImageView
-            android:id="@+id/btnChooseSizeText"
+            android:id="@+id/btnAddText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
@@ -375,12 +375,12 @@
             app:srcCompat="@drawable/font" />
 
         <ImageView
-            android:id="@+id/btnFlipText"
+            android:id="@+id/btnAddSticker"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_margin="10dp"
             android:layout_weight="1"
-            app:srcCompat="@drawable/flip_edit_text" />
+            app:srcCompat="@drawable/smiley" />
 
 
     </LinearLayout>

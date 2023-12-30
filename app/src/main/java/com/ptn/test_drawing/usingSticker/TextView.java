@@ -20,7 +20,6 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.Toast;
 
-import com.ptn.test_drawing.MainActivity;
 import com.ptn.test_drawing.R;
 import com.xiaopo.flying.sticker.BitmapStickerIcon;
 import com.xiaopo.flying.sticker.DeleteIconEvent;
@@ -69,7 +68,7 @@ public class TextView extends AppCompatActivity {
         BitmapStickerIcon heartIcon =
                 new BitmapStickerIcon(ContextCompat.getDrawable(this, R.drawable.ic_favorite_white_24dp),
                         BitmapStickerIcon.LEFT_BOTTOM);
-        heartIcon.setIconEvent(new HelloIconEvent());
+        heartIcon.setIconEvent(new EditIconEvent());
 
         stickerView.setIcons(Arrays.asList(deleteIcon, zoomIcon, flipIcon, heartIcon));
 
@@ -126,6 +125,11 @@ public class TextView extends AppCompatActivity {
             @Override
             public void onStickerDoubleTapped(@NonNull Sticker sticker) {
                 Log.d(TAG, "onDoubleTapped: double tap will be with two click");
+            }
+
+            @Override
+            public void onReplace(@NonNull Sticker sticker) {
+                Log.d(TAG, "onStickerChanged");
             }
         });
 

@@ -1,9 +1,13 @@
 package com.ptn.test_drawing;
 
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
 import android.os.AsyncTask;
-import android.util.Log;
+import android.util.Base64;
+import android.view.View;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
@@ -24,6 +28,30 @@ public class Connection {
             ex.printStackTrace();
         }
     }
+
+    public String convertImg(Bitmap mBitmap) {
+        try {
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            mBitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
+            byte[] imageBytes = byteArrayOutputStream.toByteArray();
+            String imageString = Base64.encodeToString(imageBytes, Base64.DEFAULT);
+            return imageString;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    public Bitmap getBitmapFromViewUsingCanvas(View view) {
+        Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
+
+        Canvas canvas = new Canvas(bitmap);
+
+        view.draw(canvas);
+
+        return bitmap;
+    }
+
 
     class Client_send extends AsyncTask<String, Void, Void> {
         Socket s;

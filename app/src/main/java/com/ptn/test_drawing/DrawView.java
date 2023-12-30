@@ -15,19 +15,14 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
 import android.view.View;
-import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 
-import com.xiaopo.flying.sticker.DeleteIconEvent;
 import com.xiaopo.flying.sticker.StickerView;
-import com.xiaopo.flying.sticker.TextSticker;
 
 public class DrawView extends StickerView {
     boolean isErasing = false;
@@ -47,8 +42,7 @@ public class DrawView extends StickerView {
     private ArrayList<MyLine> redoLineShapePaths = new ArrayList<>();
     private ArrayList<Bitmap> imagePaths = new ArrayList<>();
     private ArrayList<Bitmap> redoImagePaths = new ArrayList<>();
-    private ArrayList<TextSticker> textStickers = new ArrayList<>();
-    private ArrayList<TextSticker> redoTextStickers = new ArrayList<>();
+
 
 
     private int currentColor;
@@ -75,7 +69,7 @@ public class DrawView extends StickerView {
     String imageString, ip;
     int port;
     ListView listView, listMenu;
-    LinearLayout layoutMenu, layoutSizeAndOpacity, layoutSizeEraser, shapeLayout;
+    LinearLayout layoutMenu, layoutSizeAndOpacity, layoutSizeEraser, shapeLayout, textLayout;
 
     private ScaleGestureDetector scaleGestureDetector;
 
@@ -133,7 +127,7 @@ public class DrawView extends StickerView {
                 mCanvas.drawColor(Color.WHITE);
 
                 //vẽ lại toàn bộ các Stroke đang được lưu trữ
-                int strokeIndex = 0, rectIndex = 0, ovalIndex = 0, lineIndex = 0, imageIndex = 0, textIndex = 0;
+                int strokeIndex = 0, rectIndex = 0, ovalIndex = 0, lineIndex = 0, imageIndex = 0;
                 for (int item : itemPath) {
                     switch (item) {
                         case 0:
@@ -172,10 +166,6 @@ public class DrawView extends StickerView {
                             Bitmap image = imagePaths.get(imageIndex);
                             imageIndex++;
                             mCanvas.drawBitmap(image, 0, 0, mBitmapPaint);
-                            break;
-                        case 5:
-                            TextSticker textSticker = textStickers.get(textIndex);
-                            textIndex++;
                             break;
                     }
                 }
@@ -246,17 +236,7 @@ public class DrawView extends StickerView {
     }
 
 
-    public TextSticker addText() {
-        // Khởi tạo sticker
-        TextSticker sticker = new TextSticker(getContext());
-        sticker.setText("Hello, world!");
-        sticker.resizeText();
-        sticker.setTextColor(Color.BLUE);
-        textStickers.add(sticker);
-        itemPath.add(5);
-        drawingView.invalidate();
-        return sticker;
-    }
+
 
 
     private boolean isTouchInsideView(float x, float y) {
@@ -287,6 +267,7 @@ public class DrawView extends StickerView {
                                     LinearLayout layoutSizeAndOpacity,
                                     LinearLayout layoutSizeEraser,
                                     LinearLayout shapeLayout,
+                                    LinearLayout textLayout,
                                     ImageView btnUndo,
                                     ImageView btnRedo) {
         this.listMenu = listMenu;
@@ -295,6 +276,7 @@ public class DrawView extends StickerView {
         this.layoutSizeAndOpacity = layoutSizeAndOpacity;
         this.layoutSizeEraser = layoutSizeEraser;
         this.shapeLayout = shapeLayout;
+        this.textLayout = textLayout;
         this.btnUndo = btnUndo;
         this.btnRedo = btnRedo;
     }
@@ -349,15 +331,7 @@ public class DrawView extends StickerView {
                         sentImgage();
                     }
                     break;
-                case 5:
-                    if (textStickers.size() != 0) {
-                        redoTextStickers.add(textStickers.remove((textStickers.size() - 1)));
-                        setEnableRedo();
-                        drawingView.invalidate();
-                        Log.d("SentImage", "Image:" + mBitmap);
-                        sentImgage();
-                    }
-                    break;
+
             }
         }
         if (itemPath.size() <= 0) {
@@ -410,14 +384,7 @@ public class DrawView extends StickerView {
                         sentImgage();
                     }
                     break;
-                case 5:
-                    if (redoTextStickers.size() != 0) {
-                        textStickers.add(redoTextStickers.remove(redoTextStickers.size() - 1));
-                        drawingView.invalidate();
-                        Log.d("SentImage", "Image:" + mBitmap);
-                        sentImgage();
-                    }
-                    break;
+
             }
         }
         if (redoItemPath.size() <= 0) {
@@ -430,7 +397,7 @@ public class DrawView extends StickerView {
 
     // Lưu nội dung của view vào bitmap
     public Bitmap save() {
-        return mBitmap;
+        return connection.getBitmapFromViewUsingCanvas(DrawView.this);
     }
 
 
@@ -463,8 +430,6 @@ public class DrawView extends StickerView {
         redoItemPath.clear();
         imagePaths.clear();
         redoImagePaths.clear();
-        textStickers.clear();
-        redoTextStickers.clear();
         mCanvas.drawColor(Color.TRANSPARENT, PorterDuff.Mode.CLEAR);
 
         // Vẽ lại view
@@ -644,22 +609,6 @@ public class DrawView extends StickerView {
         }
     }
 
-//    @Override
-//    protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-//        switch (touchMode) {
-//            case DRAWVIEW:
-//                // Xử lý sự kiện cho DrawView
-//                Log.d("StickerAndDrawView", "onLayout of DrawView called");
-//                break;
-//            case STICKERVIEW:
-//                // Xử lý sự kiện bằng cách gọi onTouchEvent của StickerView
-//                super.onLayout(changed, left, top, right, bottom);
-//                break;
-//        }
-//    }
-
-
-
 
     private int dpToPx(int dp) {
         return (int) (dp * getResources().getDisplayMetrics().density);
@@ -687,23 +636,22 @@ public class DrawView extends StickerView {
         redoItemPath.clear();
     }
 
-    public void convertImg() {
-        try {
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            mBitmap.compress(Bitmap.CompressFormat.PNG, 100, byteArrayOutputStream);
-            byte[] imageBytes = byteArrayOutputStream.toByteArray();
-            imageString = Base64.encodeToString(imageBytes, Base64.DEFAULT);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+    private Bitmap getBitmapFromViewUsingCanvas(View view) {
+        Bitmap bitmap = Bitmap.createBitmap(view.getWidth(), view.getHeight(), Bitmap.Config.ARGB_8888);
+
+        Canvas canvas = new Canvas(bitmap);
+
+        view.draw(canvas);
+
+        return bitmap;
     }
+
 
     public void sentImgage() {
         if (ip == null) {
             return;
         } else {
-            convertImg();
-            connection.sendData(imageString);
+            connection.sendData(connection.convertImg(connection.getBitmapFromViewUsingCanvas(DrawView.this)));
         }
     }
 
@@ -758,5 +706,6 @@ public class DrawView extends StickerView {
         layoutSizeAndOpacity.setVisibility(View.GONE);
         layoutSizeEraser.setVisibility(View.GONE);
         shapeLayout.setVisibility(View.GONE);
+        textLayout.setVisibility(View.GONE);
     }
 }
