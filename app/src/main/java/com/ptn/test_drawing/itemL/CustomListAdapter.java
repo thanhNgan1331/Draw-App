@@ -7,6 +7,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
@@ -49,7 +50,6 @@ public class CustomListAdapter  extends BaseAdapter {
             holder = new ViewHolder();
             holder.itemView = (ImageView) convertView.findViewById(R.id.imgItem);
             holder.itemName = (TextView) convertView.findViewById(R.id.txtNameItem);
-            holder.constraintLayout = (ConstraintLayout) convertView.findViewById(R.id.constraintLayout);
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
@@ -89,7 +89,7 @@ public class CustomListAdapter  extends BaseAdapter {
     static class ViewHolder {
         ImageView itemView;
         TextView itemName;
-        ConstraintLayout constraintLayout;
+        LinearLayout linearLayout;
     }
 
 }

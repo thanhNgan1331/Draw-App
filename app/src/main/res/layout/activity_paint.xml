@@ -10,16 +10,14 @@
     <!--Layout Drawing-->
     <com.ptn.test_drawing.DrawView
         android:id="@+id/draw_view"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:showBorder="true"
-        app:showIcons="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="parent"
-        app:layout_constraintVertical_bias="0.9" >
+        app:layout_constraintTop_toTopOf="parent"
+        app:showBorder="true"
+        app:showIcons="true">
 
     </com.ptn.test_drawing.DrawView>
 
@@ -70,123 +68,67 @@
 
     </LinearLayout>
 
-    <!--Layout Size and Opacity Pen-->
+
+
+    <!--Layout Size Pen-->
     <LinearLayout
-        android:id="@+id/layoutSizeAndOpacity"
-        android:layout_width="301dp"
-        android:layout_height="164dp"
-        android:layout_marginTop="12dp"
-        android:background="#E0E0E0"
+        android:id="@+id/layoutSizePen"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
         android:orientation="vertical"
+        android:padding="10dp"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.468"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/layoutMenu">
 
-        <!--Layout size pen-->
         <LinearLayout
-            android:id="@+id/layoutSize"
+            android:id="@+id/layoutTextSizePen"
             android:layout_width="match_parent"
-            android:layout_height="80dp"
-            android:orientation="vertical"
+            android:layout_height="40dp"
+            android:orientation="horizontal"
             android:padding="10dp">
 
-            <LinearLayout
-                android:id="@+id/layoutTextSize"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-                <TextView
-                    android:id="@+id/txtSize"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Size"
-                    android:textColor="@color/black" />
-
-                <TextView
-                    android:id="@+id/txtCountSize"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="0"
-                    android:textAlignment="textEnd"
-                    android:textColor="@color/black" />
-            </LinearLayout>
-
-            <SeekBar
-                android:id="@+id/seekBarSize"
-                android:layout_width="match_parent"
+            <TextView
+                android:id="@+id/txtSizePen"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:max="50"
-                android:progress="10" />
+                android:layout_weight="1"
+                android:text="Size"
+                android:textColor="@color/black" />
 
+            <TextView
+                android:id="@+id/txtCountSizePen"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="0"
+                android:textAlignment="textEnd"
+                android:textColor="@color/black" />
         </LinearLayout>
 
-        <View
+        <SeekBar
+            android:id="@+id/seekBarSizePen"
             android:layout_width="match_parent"
-            android:layout_height="2dp"
-            android:background="@android:color/darker_gray" />
-
-        <LinearLayout
-            android:id="@+id/layoutOpacity"
-            android:layout_width="match_parent"
-            android:layout_height="80dp"
-            android:orientation="vertical"
-            android:padding="10dp">
-
-            <LinearLayout
-                android:id="@+id/layoutTextOpacity"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:orientation="horizontal"
-                android:padding="10dp">
-
-                <TextView
-                    android:id="@+id/txtOpacity"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="Opacity"
-                    android:textColor="@color/black" />
-
-                <TextView
-                    android:id="@+id/txtCountOpacity"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="0"
-
-                    android:textAlignment="textEnd"
-                    android:textColor="@color/black" />
-            </LinearLayout>
-
-            <SeekBar
-                android:id="@+id/seekBarOpacity"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="100"
-                android:progress="95" />
-
-        </LinearLayout>
+            android:layout_height="wrap_content"
+            android:max="50"
+            android:progress="10" />
 
     </LinearLayout>
+
 
     <!--Layout Menu-->
     <LinearLayout
         android:id="@+id/layoutMenu"
-        android:layout_width="400dp"
-        android:layout_height="50dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginLeft="8dp"
         android:layout_marginRight="8dp"
         android:background="@drawable/customborder"
         android:orientation="horizontal"
         android:padding="0.5dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.454"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
@@ -265,29 +207,30 @@
             tools:ignore="SpeakableTextPresentCheck" />
     </LinearLayout>
 
-    <!--Button Full Screen-->
+
+
+
     <ImageView
         android:id="@+id/btnFullScreenShow"
         android:layout_width="32dp"
         android:layout_height="32dp"
-        android:layout_margin="10dp"
+        android:layout_marginRight="18dp"
+        android:layout_marginTop="10dp"
         android:layout_weight="1"
         android:background="@drawable/selector_btn_menu"
         android:clickable="true"
         android:src="@drawable/full_screen"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.976"
-        app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:ignore="SpeakableTextPresentCheck" />
 
     <!--List Item Menu-->
     <ListView
         android:id="@+id/listMenu"
-        android:layout_width="200dp"
-        android:layout_height="305dp"
-        android:background="#E0E0E0"
+        android:layout_width="220dp"
+        android:layout_height="320dp"
+        android:background="#EFEFEF"
         android:divider="@drawable/border_listview"
         android:dividerHeight="1dp"
         android:visibility="gone"
@@ -337,9 +280,11 @@
     <!-- List Item For New -->
     <ListView
         android:id="@+id/listItemForNew"
-        android:layout_width="193dp"
+        android:layout_width="220dp"
         android:layout_height="108dp"
-        android:background="#E0E0E0"
+        android:background="#EFEFEF"
+        android:divider="@drawable/border_listview"
+        android:dividerHeight="1dp"
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/layoutMenu" />

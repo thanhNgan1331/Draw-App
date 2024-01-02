@@ -37,6 +37,10 @@ import androidx.core.content.ContextCompat;
 import com.ptn.test_drawing.itemL.CustomListAdapter;
 import com.ptn.test_drawing.itemL.Item_draw;
 import com.ptn.test_drawing.usingSticker.EditIconEvent;
+import com.skydoves.colorpickerview.ColorEnvelope;
+import com.skydoves.colorpickerview.ColorPickerDialog;
+import com.skydoves.colorpickerview.ColorPickerView;
+import com.skydoves.colorpickerview.listeners.ColorEnvelopeListener;
 import com.xiaopo.flying.sticker.BitmapStickerIcon;
 import com.xiaopo.flying.sticker.DeleteIconEvent;
 import com.xiaopo.flying.sticker.FlipHorizontallyEvent;
@@ -68,10 +72,10 @@ public class ActivityPaint extends AppCompatActivity {
     int DefaultColor = Color.BLACK;
 
     ListView listItemForNew, listMenu;
-    LinearLayout layoutMenu, layoutSizeAndOpacity, shapeLayout, layoutSizeEraser, textLayout;
+    LinearLayout layoutMenu, layoutSizePen, shapeLayout, layoutSizeEraser, textLayout;
 
-    SeekBar seekBarSize, seekBarOpacity, seekBarEraser;
-    TextView txtCountSize, txtCountOpacity, txtCountEraser;
+    SeekBar seekBarSizePen, seekBarEraser;
+    TextView txtCountSizePen, txtCountEraser;
 
     String ip;
     int port;
@@ -153,18 +157,16 @@ public class ActivityPaint extends AppCompatActivity {
         btnAddSticker = findViewById(R.id.btnAddSticker);
 
         // Các seekbar
-        seekBarSize = findViewById(R.id.seekBarSize);
-        seekBarOpacity = findViewById(R.id.seekBarOpacity);
+        seekBarSizePen = findViewById(R.id.seekBarSizePen);
         seekBarEraser = findViewById(R.id.seekBarSizeEraser);
 
         // Các textview
-        txtCountSize = findViewById(R.id.txtCountSize);
-        txtCountOpacity = findViewById(R.id.txtCountOpacity);
+        txtCountSizePen = findViewById(R.id.txtCountSizePen);
         txtCountEraser = findViewById(R.id.txtCountSizeEraser);
 
         // Các layout
         layoutMenu = findViewById(R.id.layoutMenu);
-        layoutSizeAndOpacity = findViewById(R.id.layoutSizeAndOpacity);
+        layoutSizePen = findViewById(R.id.layoutSizePen);
         layoutSizeEraser = findViewById(R.id.layoutSizeEraser);
         shapeLayout = findViewById(R.id.shapeLayout);
         textLayout = findViewById(R.id.textLayout);
@@ -174,7 +176,7 @@ public class ActivityPaint extends AppCompatActivity {
         listMenu = findViewById(R.id.listMenu);
 
         // Dùng để truyền dữ liệu từ các view trong Activity sang class DrawView
-        paint.setObjectInActivity(listMenu, listItemForNew, layoutMenu, layoutSizeAndOpacity, layoutSizeEraser, shapeLayout, textLayout, btnUndo, btnRedo);
+        paint.setObjectInActivity(listMenu, listItemForNew, layoutMenu, layoutSizePen, layoutSizeEraser, shapeLayout, textLayout, btnUndo, btnRedo);
 
 
 
@@ -215,17 +217,18 @@ public class ActivityPaint extends AppCompatActivity {
         btnColor.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                OpenColorPickerDialog(false);
+                //OpenColorPickerDialog(false);
+                OpenColorPicker();
             }
         });
 
         btnMenu.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                layoutSizeAndOpacity.setVisibility(View.GONE);
+                layoutSizePen.setVisibility(View.GONE);
                 layoutSizeEraser.setVisibility(View.GONE);
                 shapeLayout.setVisibility(View.GONE);
-                showHide(v);
+                showHideLayout(listMenu);
             }
         });
 
@@ -287,8 +290,8 @@ public class ActivityPaint extends AppCompatActivity {
                                 BitmapStickerIcon.RIGHT_TOP);
                         flipIcon.setIconEvent(new FlipHorizontallyEvent());
 
-                        BitmapStickerIcon editIcon =
-                                new BitmapStickerIcon(ContextCompat.getDrawable(ActivityPaint.this, R.drawable.ic_favorite_white_24dp),
+                        BitmapStickerIcon editIcon = new BitmapStickerIcon(ContextCompat.getDrawable(ActivityPaint.this,
+                                R.drawable.ic_favorite_white_24dp),
                                         BitmapStickerIcon.LEFT_BOTTOM);
                         editIcon.setIconEvent(new EditIconEvent(connection));
 
@@ -440,35 +443,15 @@ public class ActivityPaint extends AppCompatActivity {
         });
 
 
-        txtCountSize.setText(seekBarSize.getProgress() + "");
-        txtCountOpacity.setText(seekBarOpacity.getProgress() + "%");
+        txtCountSizePen.setText(seekBarSizePen.getProgress() + "");
         txtCountEraser.setText(seekBarEraser.getProgress() + "");
 
 
-        seekBarSize.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+        seekBarSizePen.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             @Override
             public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-                txtCountSize.setText(progress + "");
+                txtCountSizePen.setText(progress + "");
                 paint.setStrokeWidth(progress);
-            }
-
-            @Override
-            public void onStartTrackingTouch(SeekBar seekBar) {
-
-            }
-
-            @Override
-            public void onStopTrackingTouch(SeekBar seekBar) {
-
-            }
-        });
-        seekBarOpacity.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
-            @Override
-            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-
-                int percentage = (int) ((progress * 255) / 100.0);
-                txtCountOpacity.setText(progress + "%");
-                paint.setAlpha(percentage);
             }
 
             @Override
@@ -510,12 +493,7 @@ public class ActivityPaint extends AppCompatActivity {
                 shapeLayout.setVisibility(View.GONE);
                 textLayout.setVisibility(View.GONE);
                 paint.setTouchMode(DrawView.TouchMode.DRAWVIEW);
-                if (layoutSizeAndOpacity.getVisibility() == View.VISIBLE) {
-                    layoutSizeAndOpacity.setVisibility(View.GONE);
-                } else {
-                    layoutSizeAndOpacity.setVisibility(View.VISIBLE);
-                    layoutSizeAndOpacity.bringToFront();
-                }
+                showHideLayout(layoutSizePen);
             }
         });
 
@@ -525,16 +503,11 @@ public class ActivityPaint extends AppCompatActivity {
                 paint.erasingStatus(true);
                 paint.drawShapeStatus(false);
                 listMenu.setVisibility(View.GONE);
-                layoutSizeAndOpacity.setVisibility(View.GONE);
+                layoutSizePen.setVisibility(View.GONE);
                 shapeLayout.setVisibility(View.GONE);
                 textLayout.setVisibility(View.GONE);
                 paint.setTouchMode(DrawView.TouchMode.DRAWVIEW);
-                if (layoutSizeEraser.getVisibility() == View.VISIBLE) {
-                    layoutSizeEraser.setVisibility(View.GONE);
-                } else {
-                    layoutSizeEraser.setVisibility(View.VISIBLE);
-                    layoutSizeEraser.bringToFront();
-                }
+                showHideLayout(layoutSizeEraser);
             }
         });
     }
@@ -662,33 +635,40 @@ public class ActivityPaint extends AppCompatActivity {
     }
 
 
-    // Hàm ẩn hiện gridview
-    public void showHide(View view) {
-        if (listMenu.getVisibility() == View.VISIBLE) {
-            listMenu.setVisibility(View.GONE);
+    // Phương thức ẩn hiện layout khi nhấn vào button
+    public void showHideLayout(View view) {
+        if (view.getVisibility() == View.VISIBLE) {
+            view.setVisibility(View.GONE);
         } else {
-            listMenu.setVisibility(View.VISIBLE);
-            listMenu.bringToFront();
+            view.setVisibility(View.VISIBLE);
+            view.bringToFront();
         }
     }
 
 
-    private void OpenColorPickerDialog(boolean AlphaSupport) {
-
-        AmbilWarnaDialog ambilWarnaDialog = new AmbilWarnaDialog(ActivityPaint.this, DefaultColor, AlphaSupport, new AmbilWarnaDialog.OnAmbilWarnaListener() {
-            @Override
-            public void onOk(AmbilWarnaDialog ambilWarnaDialog, int color) {
-                paint.setColor(color);
-            }
-
-            @Override
-            public void onCancel(AmbilWarnaDialog ambilWarnaDialog) {
-
-                Toast.makeText(ActivityPaint.this, "Color Picker Closed", Toast.LENGTH_SHORT).show();
-            }
-        });
-        ambilWarnaDialog.show();
-
+    private void OpenColorPicker() {
+        new ColorPickerDialog.Builder(this)
+                .setTitle("ColorPicker Dialog")
+                .setPreferenceName("MyColorPickerDialog")
+                .setPositiveButton(getString(R.string.confirm),
+                        new ColorEnvelopeListener() {
+                            @Override
+                            public void onColorSelected(ColorEnvelope envelope, boolean fromUser) {
+//                                setLayoutColor(envelope);
+                                paint.setColor(envelope.getColor());
+                            }
+                        })
+                .setNegativeButton(getString(R.string.cancel),
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                            }
+                        })
+                .attachAlphaSlideBar(true) // the default value is true.
+                .attachBrightnessSlideBar(true)  // the default value is true.
+                .setBottomSpace(12) // set a bottom space between the last slidebar and buttons.
+                .show();
     }
 }
 

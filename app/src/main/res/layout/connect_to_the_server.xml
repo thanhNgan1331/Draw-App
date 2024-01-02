@@ -3,12 +3,12 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:background="@drawable/login_por"
+    android:background="@color/white"
     android:orientation="vertical">
 
     <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_width="364dp"
+        android:layout_height="723dp"
         android:layout_marginStart="24dp"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="24dp"
@@ -19,19 +19,28 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
+        <ImageView
+            android:layout_width="150dp"
+            android:layout_height="150dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="40dp"
+            app:srcCompat="@drawable/logo" />
+
+
         <TextView
             android:id="@+id/txtHeader"
             style="@style/loginHeader"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="150dp"
-            android:layout_marginBottom="40dp"
-            android:text="Connect To\nThe Server" />
+            android:layout_marginTop="10dp"
+            android:textSize="20sp"
+            android:text="Connect To The Server"
+            android:textAlignment="center" />
 
         <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/textInputIPv4"
             style="@style/parent"
-            android:layout_marginTop="10dp">
+            android:layout_marginTop="20dp">
 
             <EditText
                 android:id="@+id/txtIP"
@@ -68,33 +77,42 @@
             style="@style/parent"
             android:layout_marginTop="@dimen/loginViewsMargin"
             android:gravity="center"
+            android:textColor="@drawable/text_color"
             android:textStyle="bold"
-            android:visibility="gone"
-            android:textColor="@drawable/text_color"/>
+            android:visibility="gone" />
+
+
+
         <Button
             android:id="@+id/btnConnect"
-            style="@style/loginButton"
-            android:layout_gravity="right"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:background="@drawable/login_button_bk"
+            android:text="Connect"
             android:layout_marginTop="@dimen/loginViewsMargin"
-            android:text="Connect" />
+
+
+            />
 
         <TextView
             android:id="@+id/txtContinueWithoutConnection"
             style="@style/parent"
             android:layout_marginTop="@dimen/loginViewsMargin"
             android:text="Continue without connection"
-            android:textAlignment="textEnd"
-            android:textStyle="bold"
-            android:textColor="@drawable/text_color"/>
+            android:textAlignment="center"
+            android:textColor="@drawable/text_color"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/txtScanQR"
             style="@style/parent"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/loginViewsMargin"
+            android:layout_marginTop="20dp"
             android:text="Scan QR to connect"
-            android:textAlignment="textEnd"
+            android:textAlignment="center"
+            android:layout_gravity="center"
             android:textColor="@drawable/text_color"
             android:textStyle="bold" />
 

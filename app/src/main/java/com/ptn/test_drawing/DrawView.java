@@ -71,14 +71,6 @@ public class DrawView extends StickerView {
     ListView listView, listMenu;
     LinearLayout layoutMenu, layoutSizeAndOpacity, layoutSizeEraser, shapeLayout, textLayout;
 
-    private ScaleGestureDetector scaleGestureDetector;
-
-    // Các biến để giữ giá trị zoom
-    private float scaleFactor = 1.0f;
-    private static final float MIN_SCALE_FACTOR = 0.2f;
-    private static final float MAX_SCALE_FACTOR = 5.0f;
-    private float pivotX = 0f, pivotY = 0f;
-
     ImageView btnUndo, btnRedo;
     private View drawingView;
     private Connection connection;
@@ -122,7 +114,6 @@ public class DrawView extends StickerView {
             protected void onDraw(Canvas canvas) {
                 super.onDraw(canvas);
                 canvas.save();
-                canvas.scale(scaleFactor, scaleFactor, pivotX, pivotY);
 
                 mCanvas.drawColor(Color.WHITE);
 
@@ -232,21 +223,20 @@ public class DrawView extends StickerView {
             }
         };
         addView(drawingView, new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT));
-        scaleGestureDetector = new ScaleGestureDetector(context, new ScaleListener());
     }
 
 
 
 
 
-    private boolean isTouchInsideView(float x, float y) {
-        // Xác định khu vực hợp lệ dựa trên scaleFactor và kích thước của View
-        float scaledWidth = drawingView.getWidth() * scaleFactor;
-        float scaledHeight = drawingView.getHeight() * scaleFactor;
-
-        // Kiểm tra xem tọa độ x, y có nằm trong khu vực này không
-        return x >= 0 && x <= scaledWidth && y >= 0 && y <= scaledHeight;
-    }
+//    private boolean isTouchInsideView(float x, float y) {
+//        // Xác định khu vực hợp lệ dựa trên scaleFactor và kích thước của View
+//        float scaledWidth = drawingView.getWidth() * scaleFactor;
+//        float scaledHeight = drawingView.getHeight() * scaleFactor;
+//
+//        // Kiểm tra xem tọa độ x, y có nằm trong khu vực này không
+//        return x >= 0 && x <= scaledWidth && y >= 0 && y <= scaledHeight;
+//    }
 
     public void setColor(int color) {
         currentColor = color;
@@ -441,22 +431,22 @@ public class DrawView extends StickerView {
     }
 
 
-    private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
-        @Override
-        public boolean onScale(ScaleGestureDetector detector) {
-            scaleFactor *= detector.getScaleFactor();
-
-            // Giới hạn giá trị scaleFactor để tránh phóng to quá mức hoặc thu nhỏ quá mức
-            scaleFactor = Math.max(MIN_SCALE_FACTOR, Math.min(MAX_SCALE_FACTOR, scaleFactor));
-
-            // Cập nhật điểm neo dựa trên vị trí chạm của ScaleGestureDetector
-            pivotX = detector.getFocusX();
-            pivotY = detector.getFocusY();
-
-            drawingView.invalidate(); // Vẽ lại khi có sự thay đổi
-            return true;
-        }
-    }
+//    private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+//        @Override
+//        public boolean onScale(ScaleGestureDetector detector) {
+//            scaleFactor *= detector.getScaleFactor();
+//
+//            // Giới hạn giá trị scaleFactor để tránh phóng to quá mức hoặc thu nhỏ quá mức
+//            scaleFactor = Math.max(MIN_SCALE_FACTOR, Math.min(MAX_SCALE_FACTOR, scaleFactor));
+//
+//            // Cập nhật điểm neo dựa trên vị trí chạm của ScaleGestureDetector
+//            pivotX = detector.getFocusX();
+//            pivotY = detector.getFocusY();
+//
+//            drawingView.invalidate(); // Vẽ lại khi có sự thay đổi
+//            return true;
+//        }
+//    }
 
 
     private void touchStart(float x, float y) {
@@ -509,12 +499,12 @@ public class DrawView extends StickerView {
 
     private boolean handleDrawViewTouchEvent(MotionEvent event) {
         // Gọi onTouchEvent của ScaleGestureDetector để xử lý sự kiện phóng to và thu nhỏ
-        scaleGestureDetector.onTouchEvent(event);
+        //scaleGestureDetector.onTouchEvent(event);
 
         float x = event.getX();
         float y = event.getY();
 
-        if (isTouchInsideView(x, y)) {
+        if (true) {
             if (drawShapeStatus == false) {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
