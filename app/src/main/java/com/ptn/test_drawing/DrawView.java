@@ -10,7 +10,6 @@ import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.util.AttributeSet;
-import android.util.Base64;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -19,7 +18,6 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 
-import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 
 import com.xiaopo.flying.sticker.StickerView;
@@ -29,19 +27,19 @@ public class DrawView extends StickerView {
     private static final float TOUCH_TOLERANCE = 4;
     private float mX, mY;
     private Path mPath;
-    private Paint mPaint;
-    private ArrayList<Integer> itemPath = new ArrayList<>();//xác định thứ tự item đã vẽ (0: stroke,1: rectangle,2: oval,3: line, 4: image, 5: text)
-    private ArrayList<Integer> redoItemPath = new ArrayList<>();//xác định thứ tự item đã undo
-    private ArrayList<Stroke> strokePaths = new ArrayList<>(); // Lưu các stroke đã vẽ
-    private ArrayList<Stroke> redoStrokePaths = new ArrayList<>(); // Lưu các stroke đã undo
-    private ArrayList<MyRectangle> rectShapePaths = new ArrayList<>();//mảng chứa các đối tượng Rect hiện có trên màn hình
-    private ArrayList<MyRectangle> redoRectShapePaths = new ArrayList<>();//lưu các đối tượng Rect đã undo
-    private ArrayList<MyOval> ovalShapePaths = new ArrayList<>();
-    private ArrayList<MyOval> redoOvalShapePaths = new ArrayList<>();
-    private ArrayList<MyLine> lineShapePaths = new ArrayList<>();
-    private ArrayList<MyLine> redoLineShapePaths = new ArrayList<>();
-    private ArrayList<Bitmap> imagePaths = new ArrayList<>();
-    private ArrayList<Bitmap> redoImagePaths = new ArrayList<>();
+    private final Paint mPaint;
+    private final ArrayList<Integer> itemPath = new ArrayList<>();//xác định thứ tự item đã vẽ (0: stroke,1: rectangle,2: oval,3: line, 4: image, 5: text)
+    private final ArrayList<Integer> redoItemPath = new ArrayList<>();//xác định thứ tự item đã undo
+    private final ArrayList<Stroke> strokePaths = new ArrayList<>(); // Lưu các stroke đã vẽ
+    private final ArrayList<Stroke> redoStrokePaths = new ArrayList<>(); // Lưu các stroke đã undo
+    private final ArrayList<MyRectangle> rectShapePaths = new ArrayList<>();//mảng chứa các đối tượng Rect hiện có trên màn hình
+    private final ArrayList<MyRectangle> redoRectShapePaths = new ArrayList<>();//lưu các đối tượng Rect đã undo
+    private final ArrayList<MyOval> ovalShapePaths = new ArrayList<>();
+    private final ArrayList<MyOval> redoOvalShapePaths = new ArrayList<>();
+    private final ArrayList<MyLine> lineShapePaths = new ArrayList<>();
+    private final ArrayList<MyLine> redoLineShapePaths = new ArrayList<>();
+    private final ArrayList<Bitmap> imagePaths = new ArrayList<>();
+    private final ArrayList<Bitmap> redoImagePaths = new ArrayList<>();
 
 
 
@@ -52,7 +50,7 @@ public class DrawView extends StickerView {
     private Bitmap mBitmap;
 
     private Canvas mCanvas;
-    private Paint mBitmapPaint = new Paint(Paint.DITHER_FLAG);
+    private final Paint mBitmapPaint = new Paint(Paint.DITHER_FLAG);
 
     private boolean drawShapeStatus = false;//kiểm tra trạng thái vẽ Shape
     private boolean drawRectStatus = false;
@@ -62,17 +60,17 @@ public class DrawView extends StickerView {
     private boolean finalDrawOvalShapeStatus = false;
     private boolean finalDrawLineShapeStatus = false;
     private float startShapeX, startShapeY;//tọa độ điểm cố định khi vẽ hình chữ nhật
-    private ArrayList<Rect> drawingRectShapePaths = new ArrayList<>(); //mảng tạm chứa các đối tượng Rect được tạo ra khi touch_move
-    private ArrayList<MyOval> drawingOvalShapePaths = new ArrayList<>();
-    private ArrayList<MyLine> drawingLineShapePaths = new ArrayList<>();
+    private final ArrayList<Rect> drawingRectShapePaths = new ArrayList<>(); //mảng tạm chứa các đối tượng Rect được tạo ra khi touch_move
+    private final ArrayList<MyOval> drawingOvalShapePaths = new ArrayList<>();
+    private final ArrayList<MyLine> drawingLineShapePaths = new ArrayList<>();
 
-    String imageString, ip;
+    String ip;
     int port;
     ListView listView, listMenu;
     LinearLayout layoutMenu, layoutSizeAndOpacity, layoutSizeEraser, shapeLayout, textLayout;
 
     ImageView btnUndo, btnRedo;
-    private View drawingView;
+    private final View drawingView;
     private Connection connection;
 
     // Các biến để quản lý các chế độ vẽ
@@ -100,7 +98,6 @@ public class DrawView extends StickerView {
 
     public DrawView(Context context, AttributeSet attrs) {
         super(context, attrs);
-        Log.d("StickerAndDrawView", "DrawView Constructor called");
 
         mPaint = new Paint();
         mPaint.setAntiAlias(true);
@@ -164,16 +161,16 @@ public class DrawView extends StickerView {
                 mPaint.setStrokeWidth(currentStrokeWidth);
                 mPaint.setAlpha(currentAlpha);
 
-                if (drawShapeStatus == true)//xử lý sự kiện vẽ shape
+                if (drawShapeStatus)//xử lý sự kiện vẽ shape
                 {
-                    if (drawRectStatus == true)//xử lý sự kiện vẽ hcn
+                    if (drawRectStatus)//xử lý sự kiện vẽ hcn
                     {
                         if (drawingRectShapePaths.size() > 0) //vẫn đang ở sự kiện touch_move
                         {
                             Rect lastRect = drawingRectShapePaths.get(drawingRectShapePaths.size() - 1);
                             mCanvas.drawRect(lastRect, mPaint);//chỉ vẽ hcn ở vị trí đang chạm
                         }
-                        if (finalDrawRectShapeStatus == true) //khi ở sự kiện touch_up
+                        if (finalDrawRectShapeStatus) //khi ở sự kiện touch_up
                         {
                             Rect lastRect = drawingRectShapePaths.get(drawingRectShapePaths.size() - 1);
                             MyRectangle newRect = new MyRectangle(currentColor, currentStrokeWidth, lastRect, currentAlpha);
@@ -183,14 +180,14 @@ public class DrawView extends StickerView {
                             finalDrawRectShapeStatus = false;
                             mCanvas.drawRect(lastRect, mPaint);//vẽ hcn
                         }
-                    } else if (drawCircleStatus == true) //xử lí sự kiện vẽ oval
+                    } else if (drawCircleStatus) //xử lí sự kiện vẽ oval
                     {
                         if (drawingOvalShapePaths.size() > 0) //vẫn đang ở sự kiện touch_move
                         {
                             MyOval lastOval = drawingOvalShapePaths.get(drawingOvalShapePaths.size() - 1);
                             mCanvas.drawOval(lastOval.left, lastOval.top, lastOval.right, lastOval.bottom, mPaint);//chỉ vẽ oval ở vị trí đang chạm
                         }
-                        if (finalDrawOvalShapeStatus == true) //khi ở sự kiện touch_up
+                        if (finalDrawOvalShapeStatus) //khi ở sự kiện touch_up
                         {
                             MyOval lastOval = drawingOvalShapePaths.get(drawingOvalShapePaths.size() - 1);
                             MyOval newOval = new MyOval(lastOval.left, lastOval.top, lastOval.right, lastOval.bottom, currentColor, currentStrokeWidth, currentAlpha);
@@ -200,13 +197,13 @@ public class DrawView extends StickerView {
                             finalDrawOvalShapeStatus = false;
                             mCanvas.drawOval(lastOval.left, lastOval.top, lastOval.right, lastOval.bottom, mPaint);//vẽ oval
                         }
-                    } else if (drawLineStatus == true) {
+                    } else if (drawLineStatus) {
                         if (drawingLineShapePaths.size() > 0) //vẫn đang ở sự kiện touch_move
                         {
                             MyLine lastLine = drawingLineShapePaths.get(drawingLineShapePaths.size() - 1);
                             mCanvas.drawLine(lastLine.startX, lastLine.startY, lastLine.stopX, lastLine.stopY, mPaint);//chỉ vẽ line ở vị trí đang chạm
                         }
-                        if (finalDrawLineShapeStatus == true) //khi ở sự kiện touch_up
+                        if (finalDrawLineShapeStatus) //khi ở sự kiện touch_up
                         {
                             MyLine lastLine = drawingLineShapePaths.get(drawingLineShapePaths.size() - 1);
                             MyLine newLine = new MyLine(lastLine.startX, lastLine.startY, lastLine.stopX, lastLine.stopY, currentColor, currentStrokeWidth, currentAlpha);
@@ -451,7 +448,7 @@ public class DrawView extends StickerView {
 
     private void touchStart(float x, float y) {
         mPath = new Path();
-        if (isErasing == false) {
+        if (!isErasing) {
             Stroke fp = new Stroke(currentColor, currentStrokeWidth, mPath, currentAlpha);
             strokePaths.add(fp);
             itemPath.add(0);
@@ -486,8 +483,8 @@ public class DrawView extends StickerView {
     }
 
 
-    private Handler handler = new Handler();
-    private Runnable sentImageRunnable = new Runnable() {
+    private final Handler handler = new Handler();
+    private final Runnable sentImageRunnable = new Runnable() {
         @Override
         public void run() {
             sentImgage();
@@ -505,7 +502,7 @@ public class DrawView extends StickerView {
         float y = event.getY();
 
         if (true) {
-            if (drawShapeStatus == false) {
+            if (!drawShapeStatus) {
                 switch (event.getAction()) {
                     case MotionEvent.ACTION_DOWN:
                         touchStart(x, y);
@@ -528,7 +525,7 @@ public class DrawView extends StickerView {
                         break;
                 }
             } else {
-                if (drawRectStatus == true) {
+                if (drawRectStatus) {
                     switch (event.getAction()) {
                         case MotionEvent.ACTION_DOWN:
                             startShapeX = event.getX();
@@ -545,7 +542,7 @@ public class DrawView extends StickerView {
                             drawingView.invalidate();
                             break;
                     }
-                } else if (drawCircleStatus == true) {
+                } else if (drawCircleStatus) {
                     switch (event.getAction()) {
                         case MotionEvent.ACTION_DOWN:
                             startShapeX = event.getX();
@@ -562,7 +559,7 @@ public class DrawView extends StickerView {
                             drawingView.invalidate();
                             break;
                     }
-                } else if (drawLineStatus == true) {
+                } else if (drawLineStatus) {
                     switch (event.getAction()) {
                         case MotionEvent.ACTION_DOWN:
                             startShapeX = event.getX();
@@ -639,7 +636,6 @@ public class DrawView extends StickerView {
 
     public void sentImgage() {
         if (ip == null) {
-            return;
         } else {
             connection.sendData(connection.convertImg(connection.getBitmapFromViewUsingCanvas(DrawView.this)));
         }
@@ -671,7 +667,7 @@ public class DrawView extends StickerView {
 
     public void drawShapeStatus(boolean status) {
         drawShapeStatus = status;
-        if (status == false) {
+        if (!status) {
             drawRectStatus = false;
             drawCircleStatus = false;
             drawLineStatus = false;

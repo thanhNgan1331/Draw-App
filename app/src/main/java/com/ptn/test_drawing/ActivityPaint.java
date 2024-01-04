@@ -430,6 +430,7 @@ public class ActivityPaint extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 layoutMenu.setVisibility(View.GONE);
+                paint.hideAllLayout();
                 btnFullScreenShow.setVisibility(View.VISIBLE);
                 btnFullScreenShow.bringToFront();
             }

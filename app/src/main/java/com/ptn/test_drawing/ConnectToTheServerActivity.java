@@ -115,7 +115,6 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
         txtScanQR.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-
                 scanCode();
             }
         });
@@ -160,9 +159,11 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
     private CountDownTimer connectionTimer = new CountDownTimer(10000, 1000) { // Thời gian tối đa 10 giây
         public void onTick(long millisUntilFinished) {
             txtProcessing.setText("Đang kết nối tới server... (" + millisUntilFinished / 1000 + " giây)");
+            unableButton();
         }
 
         public void onFinish() {
+            enableButton();
             // Hết thời gian chờ mà không kết nối được
             progressBar.setVisibility(View.GONE);
             Toast.makeText(getApplicationContext(), "Không thể kết nối tới server", Toast.LENGTH_SHORT).show();
@@ -221,6 +222,7 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            enableButton();
                             progressBar.setVisibility(View.GONE);
                             txtProcessing.setVisibility(View.GONE);
                             Toast.makeText(getApplicationContext(), "Kết nối thành công", Toast.LENGTH_SHORT).show();
@@ -231,6 +233,7 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            enableButton();
                             progressBar.setVisibility(View.GONE);
                             txtProcessing.setVisibility(View.GONE);
                             Toast.makeText(getApplicationContext(), "Bị từ chối kết nối", Toast.LENGTH_SHORT).show();
@@ -242,6 +245,7 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
+                            enableButton();
                             progressBar.setVisibility(View.GONE);
                             txtProcessing.setVisibility(View.GONE);
                             Toast.makeText(getApplicationContext(), "Kết nối thất bại", Toast.LENGTH_SHORT).show();
@@ -258,5 +262,20 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
         }
     }
 
+    private void unableButton() {
+        txtIP.setEnabled(false);
+        txtPort.setEnabled(false);
+        btnConnect.setEnabled(false);
+        txtContinueWithoutConnection.setEnabled(false);
+        txtScanQR.setEnabled(false);
+    }
+
+    private void enableButton() {
+        txtIP.setEnabled(true);
+        txtPort.setEnabled(true);
+        btnConnect.setEnabled(true);
+        txtContinueWithoutConnection.setEnabled(true);
+        txtScanQR.setEnabled(true);
+    }
 
 }
