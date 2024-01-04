@@ -268,7 +268,7 @@ public class ActivityPaint extends AppCompatActivity {
                         btnSaveImage(v);
                         break;
                     case 2: // Open Image
-                        btnOpenImage(v);
+                        showAlertDialogOpenImage(v);
                         break;
                     case 3: // Text
                         textLayout.setVisibility(View.VISIBLE);
@@ -627,6 +627,37 @@ public class ActivityPaint extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 // Hành động khi nút No được nhấn
                 dialog.dismiss();
+            }
+        });
+
+        // Tạo và hiển thị AlertDialog
+        AlertDialog alertDialog = builder.create();
+        alertDialog.show();
+    }
+
+    private void showAlertDialogOpenImage(View v) {
+        // Tạo một đối tượng AlertDialog.Builder
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        // Thiết lập tiêu đề và thông điệp cho thông báo
+        builder.setTitle("Open image");
+        builder.setMessage("You will lose your sketch if you open image. Are you sure you want to save before do it?");
+
+        // Thiết lập nút OK và hành động khi nút đó được nhấn
+        builder.setPositiveButton("SAVE", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Hành động khi nút OK được nhấn
+                btnSaveImage(v);
+                btnOpenImage(v);
+            }
+        });
+        // Thiết lập nút No và hành động khi nút đó được nhấn
+        builder.setNegativeButton("NO", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                // Hành động khi nút No được nhấn
+                btnOpenImage(v);
             }
         });
 

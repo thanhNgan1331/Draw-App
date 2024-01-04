@@ -396,7 +396,9 @@ public class DrawView extends StickerView {
             itemPath.add(4);
             sentImgage();
             drawingView.invalidate();
-            // Yêu cầu vẽ lại view
+            setUnableRedo();
+            setUnableUndo();
+            hideAllLayout();
         } else {
             Log.e("SetImage", "Bitmap is null");
         }
@@ -424,7 +426,7 @@ public class DrawView extends StickerView {
         drawingView.invalidate();
         setUnableRedo();
         setUnableUndo();
-        listView.setVisibility(GONE);
+        hideAllLayout();
     }
 
 
@@ -530,6 +532,8 @@ public class DrawView extends StickerView {
                         case MotionEvent.ACTION_DOWN:
                             startShapeX = event.getX();
                             startShapeY = event.getY();
+                            setEnableUndo();
+                            hideAllLayout();
                             break;
                         case MotionEvent.ACTION_MOVE:
                             drawRectShape(startShapeX, startShapeY, x, y);
@@ -547,6 +551,8 @@ public class DrawView extends StickerView {
                         case MotionEvent.ACTION_DOWN:
                             startShapeX = event.getX();
                             startShapeY = event.getY();
+                            setEnableUndo();
+                            hideAllLayout();
                             break;
                         case MotionEvent.ACTION_MOVE:
                             drawOvalShape(startShapeX, startShapeY, x, y);
@@ -564,6 +570,8 @@ public class DrawView extends StickerView {
                         case MotionEvent.ACTION_DOWN:
                             startShapeX = event.getX();
                             startShapeY = event.getY();
+                            setEnableUndo();
+                            hideAllLayout();
                             break;
                         case MotionEvent.ACTION_MOVE:
                             drawLineShape(startShapeX, startShapeY, x, y);
