@@ -109,6 +109,7 @@ public class ConnectToTheServerActivity extends AppCompatActivity {
                 Intent intent = new Intent(ConnectToTheServerActivity.this, ActivityPaint.class);
                 // Bắt đầu Activity mới
                 startActivity(intent);
+                finish();
             }
         });
 

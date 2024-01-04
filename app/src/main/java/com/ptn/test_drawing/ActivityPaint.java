@@ -57,8 +57,6 @@ import java.util.List;
 import java.util.Objects;
 
 
-import yuku.ambilwarna.AmbilWarnaDialog;
-
 
 public class ActivityPaint extends AppCompatActivity {
 
@@ -217,7 +215,6 @@ public class ActivityPaint extends AppCompatActivity {
         btnColor.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //OpenColorPickerDialog(false);
                 OpenColorPicker();
             }
         });
@@ -228,6 +225,7 @@ public class ActivityPaint extends AppCompatActivity {
                 layoutSizePen.setVisibility(View.GONE);
                 layoutSizeEraser.setVisibility(View.GONE);
                 shapeLayout.setVisibility(View.GONE);
+                paint.setTouchMode(DrawView.TouchMode.DRAWVIEW);
                 showHideLayout(listMenu);
             }
         });
@@ -618,6 +616,7 @@ public class ActivityPaint extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // Hành động khi nút OK được nhấn
+                paint.removeAllStickers();
                 paint.newImage();
             }
         });
@@ -648,7 +647,9 @@ public class ActivityPaint extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // Hành động khi nút OK được nhấn
+                paint.removeAllStickers();
                 btnSaveImage(v);
+                paint.newImage();
                 btnOpenImage(v);
             }
         });
@@ -657,7 +658,10 @@ public class ActivityPaint extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // Hành động khi nút No được nhấn
+                paint.removeAllStickers();
+                paint.newImage();
                 btnOpenImage(v);
+
             }
         });
 
@@ -672,6 +676,7 @@ public class ActivityPaint extends AppCompatActivity {
         if (view.getVisibility() == View.VISIBLE) {
             view.setVisibility(View.GONE);
         } else {
+            paint.hideAllLayout();
             view.setVisibility(View.VISIBLE);
             view.bringToFront();
         }
@@ -686,7 +691,8 @@ public class ActivityPaint extends AppCompatActivity {
                         new ColorEnvelopeListener() {
                             @Override
                             public void onColorSelected(ColorEnvelope envelope, boolean fromUser) {
-//                                setLayoutColor(envelope);
+                                TextSticker currentSticker = (TextSticker) paint.getCurrentSticker();
+                                currentSticker.setTextColor(envelope.getColor());
                                 paint.setColor(envelope.getColor());
                             }
                         })
